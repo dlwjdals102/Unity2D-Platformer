@@ -23,6 +23,17 @@ public class PlayerGroundedState : State
 
         if (player.AttackInput)
         {
+            // 시간이 지났거나(콤보 끊김) || 카운터가 3 이상이면(콤보 끝) 무조건 1타로 초기화!
+            if (Time.time >= player.lastAttackTime + player.comboWindow || player.comboCounter >= 3)
+            {
+                player.comboCounter = 1;
+            }
+            // 유예 시간 내에 눌렀다면 -> 콤보를 다음 단계로 이어줌!
+            else
+            {
+                player.comboCounter++;
+            }
+
             stateMachine.ChangeState(player.AttackState);
             return;
         }

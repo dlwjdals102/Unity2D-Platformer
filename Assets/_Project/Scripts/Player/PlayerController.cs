@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDamageable
 {
     // ==========================================
     // 1. 상태 머신 및 상태 인스턴스
@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public PlayerFallState FallState { get; private set; }
     public PlayerDashState DashState { get; private set; }
     public PlayerAttackState AttackState { get; private set; }
+    public PlayerHurtState HurtState { get; private set; }
 
     // ==========================================
     // 2. 핵심 컴포넌트
@@ -50,6 +51,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float attackRadius = 0.8f; // 타격 반경 (원형)
     [SerializeField] private LayerMask enemyLayer; // 적을 판별할 레이어
 
+    [Header("Combo Attack Settings")]
+    public int comboCounter = 1; // 현재 몇 단 공격인지 (1, 2, 3)
+    public float comboWindow = 0.5f; // 공격 후 다음 공격을 이어갈 수 있는 유예 시간
+    public float lastAttackTime = -100f; // 마지막으로 공격이 끝난 시간
+
+    [Header("Health & Defense Settings")]
+    public float maxHealth = 100f;
+    public float currentHealth { get; private set; }
+    public float iFrameDuration = 1f; // 피격 후 무적 시간 (1초)
+    private float iFrameTimer;
+
     // ==========================================
     // 4. 입력 및 상태 확인 (다른 스크립트에서 읽기 전용)
     // ==========================================
@@ -72,7 +84,7 @@ public class PlayerController : MonoBehaviour
     public bool CanCoyoteJump => coyoteTimer > 0;
     public bool CanDash => Time.time >= dashStartTime + dashCooldown;
     public float CurrentVelocityY => RB.linearVelocityY;
-
+    public bool IsInvincible => iFrameTimer > 0 || stateMachine.CurrentState == DashState;   // 무적 상태인지 확인하는 프로퍼티
 
     // ==========================================
     // 5. 유니티 생명주기 및 초기화
@@ -81,7 +93,9 @@ public class PlayerController : MonoBehaviour
     {
         RB = GetComponent<Rigidbody2D>();
         Anim = GetComponent<Animator>();
+
         DefaultGravity = RB.gravityScale; // 시작할 때 인스펙터에 설정된 중력값 기억
+        currentHealth = maxHealth;
 
         InitializeStateMachine();
         InitializeInputs();
@@ -95,6 +109,7 @@ public class PlayerController : MonoBehaviour
         FallState = new PlayerFallState(this, stateMachine, "Fall");
         DashState = new PlayerDashState(this, stateMachine, "Dash");
         AttackState = new PlayerAttackState(this, stateMachine, "Attack");
+        HurtState = new PlayerHurtState(this, stateMachine, "Hurt");
     }
     private void InitializeInputs()
     {
@@ -152,6 +167,8 @@ public class PlayerController : MonoBehaviour
 
         if (IsGrounded) coyoteTimer = coyoteTime;
         else if (coyoteTimer > 0) coyoteTimer -= Time.deltaTime;
+
+        if (iFrameTimer > 0) iFrameTimer -= Time.deltaTime;
     }
     public void UseJumpBuffer() => jumpBufferTimer = 0f;
     public void UseCoyoteTime() => coyoteTimer = 0f;
@@ -199,6 +216,35 @@ public class PlayerController : MonoBehaviour
 
                 // TODO: 나중에 여기에 타격 이펙트(Particle)나 카메라 쉐이크(Camera Shake) 호출 로직을 추가하면 됩니다.
             }
+        }
+    }
+
+    // ==========================================
+    // IDamageable 인터페이스 구현 (핵심 로직)
+    // ==========================================
+    public void TakeDamage(float damage)
+    {
+        // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
+        if (IsInvincible || currentHealth <= 0) return;
+
+        // 2. 체력 차감
+        currentHealth -= damage;
+        Debug.Log($"[플레이어 피격] 윽! 남은 체력: {currentHealth}/{maxHealth}");
+
+        // 3. 무적 시간 부여 (다단 히트 방지)
+        iFrameTimer = iFrameDuration;
+
+        // 4. 사망 체크 or 피격 상태로 강제 전환
+        if (currentHealth <= 0)
+        {
+            // Die(); // 나중에 사망 로직(PlayerDeadState)으로 교체
+            Debug.Log("플레이어 사망...");
+        }
+        else
+        {
+            // 이 부분이 FSM의 '강제 인터럽트(Interrupt)' 입니다!
+            // 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다.
+            stateMachine.ChangeState(HurtState);
         }
     }
 
