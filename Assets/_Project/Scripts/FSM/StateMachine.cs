@@ -1,18 +1,16 @@
 using UnityEngine;
 
-public class StateMachine
+public class StateMachine<T> where T : Entity
 {
-    public State CurrentState { get; private set; }
+    public State<T> CurrentState { get; private set; }
 
-    // 초기 상태 설정
-    public void Initialize(State startingState)
+    public void Initialize(State<T> startState)
     {
-        CurrentState = startingState;
+        CurrentState = startState;
         CurrentState.Enter();
     }
 
-    // 상태 전환
-    public void ChangeState(State newState)
+    public void ChangeState(State<T> newState)
     {
         CurrentState.Exit();
         CurrentState = newState;

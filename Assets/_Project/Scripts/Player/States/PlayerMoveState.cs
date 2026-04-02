@@ -2,9 +2,8 @@ using UnityEngine;
 
 public class PlayerMoveState : PlayerGroundedState
 {
-    public PlayerMoveState(PlayerController player, StateMachine stateMachine, string animBoolName) : base(player, stateMachine, animBoolName)
-    {
-    }
+    public PlayerMoveState(PlayerController entity, StateMachine<PlayerController> stateMachine, string animBoolName)
+        : base(entity, stateMachine, animBoolName) { }
 
     public override void Enter()
     {
@@ -15,20 +14,20 @@ public class PlayerMoveState : PlayerGroundedState
     {
         base.Update();
 
-        if (Mathf.Abs(player.MoveInput.x) < 0.01f)
+        if (Mathf.Abs(entity.MoveInput.x) < 0.01f)
         {
-            stateMachine.ChangeState(player.IdleState);
+            stateMachine.ChangeState(entity.IdleState);
             return;
         }
 
-        player.CheckDirectionToFace(player.MoveInput.x);
+        entity.CheckDirectionToFace(entity.MoveInput.x);
     }
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        player.SetVelocityX(player.MoveInput.x * player.moveSpeed);
+        entity.SetVelocityX(entity.MoveInput.x * entity.moveSpeed);
     }
 }
 

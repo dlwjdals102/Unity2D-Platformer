@@ -1,12 +1,12 @@
 using System;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour, IDamageable
+public class PlayerController : Entity
 {
     // ==========================================
     // 1. 상태 머신 및 상태 인스턴스
     // ==========================================
-    public StateMachine stateMachine { get; private set; }
+    public StateMachine<PlayerController> stateMachine { get; private set; }
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
     public PlayerJumpState JumpState { get; private set; }
@@ -19,8 +19,8 @@ public class PlayerController : MonoBehaviour, IDamageable
     // 2. 핵심 컴포넌트
     // ==========================================
     [Header("Components")]
-    public Rigidbody2D RB { get; private set; }
-    public Animator Anim { get; private set; }
+    /*public Rigidbody2D RB { get; private set; }
+    public Animator Anim { get; private set; }*/
     private PlayerInputActions inputActions;
 
     // ==========================================
@@ -57,8 +57,8 @@ public class PlayerController : MonoBehaviour, IDamageable
     public float lastAttackTime = -100f; // 마지막으로 공격이 끝난 시간
 
     [Header("Health & Defense Settings")]
-    public float maxHealth = 100f;
-    public float currentHealth { get; private set; }
+    /*public float maxHealth = 100f;
+    public float currentHealth { get; private set; }*/
     public float iFrameDuration = 1f; // 피격 후 무적 시간 (1초)
     private float iFrameTimer;
 
@@ -70,7 +70,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     public bool DashInput { get; private set; }
     public bool IsJumpButtonHeld { get; private set; }  // 점프 버튼을 누르고 있는 상태인지 확인하는 프로퍼티
     public bool IsGrounded { get; private set; }
-    public int FacingDirection { get; private set; } = 1;   // 1: 오른쪽, -1: 왼쪽
+    /*public int FacingDirection { get; private set; } = 1; */  // 1: 오른쪽, -1: 왼쪽
     public float DefaultGravity { get; private set; }
     public bool AttackInput { get; private set; }
 
@@ -89,10 +89,11 @@ public class PlayerController : MonoBehaviour, IDamageable
     // ==========================================
     // 5. 유니티 생명주기 및 초기화
     // ==========================================
-    private void Awake()
+    protected override void Awake()
     {
-        RB = GetComponent<Rigidbody2D>();
-        Anim = GetComponent<Animator>();
+        base.Awake();
+        /*RB = GetComponent<Rigidbody2D>();
+        Anim = GetComponent<Animator>();*/
 
         DefaultGravity = RB.gravityScale; // 시작할 때 인스펙터에 설정된 중력값 기억
         currentHealth = maxHealth;
@@ -102,7 +103,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     }
     private void InitializeStateMachine()
     {
-        stateMachine = new StateMachine();
+        stateMachine = new StateMachine<PlayerController>();
         IdleState = new PlayerIdleState(this, stateMachine, "Idle");
         MoveState = new PlayerMoveState(this, stateMachine, "Move");
         JumpState = new PlayerJumpState(this, stateMachine, "Jump");
@@ -175,24 +176,24 @@ public class PlayerController : MonoBehaviour, IDamageable
     public void UseDash() { DashInput = false; dashStartTime = Time.time; }
     public void UseAttackInput() => AttackInput = false;
     public void SetGravityScale(float scale) => RB.gravityScale = scale;
-    public void SetVelocityX(float velocityX) => RB.linearVelocityX = velocityX;
+    /*public void SetVelocityX(float velocityX) => RB.linearVelocityX = velocityX;
     public void SetVelocityY(float velocityY) => RB.linearVelocityY = velocityY;
     public void SetVelocity(float velocityX, float velocityY)
     {
         RB.linearVelocityX = velocityX;
         RB.linearVelocityY = velocityY;
-    }
+    }*/
     // 공통 함수 2: 방향 전환 (Flip)
     public void CheckDirectionToFace(float xInput)
     {
         if (xInput != 0 && xInput != FacingDirection) Flip();
     }
 
-    private void Flip()
+    /*private void Flip()
     {
         FacingDirection *= -1;
         transform.Rotate(0f, 180f, 0f); // eulerAngles 대신 Rotate 사용으로 최적화
-    }
+    }*/
     public void AnimationFinishTrigger()
     {
         stateMachine.CurrentState.AnimationFinishTrigger();
@@ -222,7 +223,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     // ==========================================
     // IDamageable 인터페이스 구현 (핵심 로직)
     // ==========================================
-    public void TakeDamage(float damage)
+    public override void TakeDamage(float damage)
     {
         // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
         if (IsInvincible || currentHealth <= 0) return;
@@ -265,4 +266,6 @@ public class PlayerController : MonoBehaviour, IDamageable
             Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
         }
     }
+
+    
 }

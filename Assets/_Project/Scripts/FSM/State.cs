@@ -1,16 +1,15 @@
 using UnityEngine;
 
-public abstract class State
+public abstract class State<T> where T : Entity
 {
-    protected PlayerController player;
-    protected StateMachine stateMachine;
+    protected T entity; // 플레이어나 적의 본체
+    protected StateMachine<T> stateMachine;
+    protected bool isAnimationFinished;
     private int animBoolHash;
 
-    protected bool isAnimationFinished;
-
-    public State(PlayerController player, StateMachine stateMachine, string animBoolName)
+    public State(T entity, StateMachine<T> stateMachine, string animBoolName)
     {
-        this.player = player;
+        this.entity = entity;
         this.stateMachine = stateMachine;
         this.animBoolHash = Animator.StringToHash(animBoolName);
     }
@@ -18,9 +17,12 @@ public abstract class State
     // 상태에 진입할 때 1회 호출 (예: 애니메이션 재생, 파티클 생성)
     public virtual void Enter()
     {
-        // 상태 진입 시 해당 애니메이션 Bool 파라미터를 true로 만듭니다.
-        player.Anim.SetBool(animBoolHash, true);
-        isAnimationFinished = false; // 진입 시 초기화
+        // T 타입이 무엇이든 Animator를 가지고 있다고 가정하거나, 
+        // 하단에 설명할 공통 인터페이스/베이스를 활용해 접근합니다.
+        // 여기서는 직관성을 위해 직접 접근 방식을 예로 듭니다.
+        GetAnimator(entity).SetBool(animBoolHash, true);
+        isAnimationFinished = false;
+
     }
 
     // 매 프레임 호출 (예: 입력 감지, 타이머 체크)
@@ -33,12 +35,11 @@ public abstract class State
     public virtual void Exit()
     {
         // 상태 종료 시 해당 애니메이션 Bool 파라미터를 false로 만듭니다.
-        player.Anim.SetBool(animBoolHash, false);
+        GetAnimator(entity).SetBool(animBoolHash, false);
     }
 
-    // 애니메이션 이벤트에서 호출할 가상 함수
-    public virtual void AnimationFinishTrigger()
-    {
-        isAnimationFinished = true;
-    }
+    public virtual void AnimationFinishTrigger() => isAnimationFinished = true;
+
+    // 공통으로 Animator를 가져오기 위한 헬퍼 (또는 entity.GetComponent 사용)
+    private Animator GetAnimator(T entity) => entity.GetComponent<Animator>();
 }
