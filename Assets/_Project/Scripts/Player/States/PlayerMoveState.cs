@@ -27,7 +27,7 @@ public class PlayerMoveState : PlayerGroundedState
     {
         base.FixedUpdate();
 
-        player.SetVelocityX(player.MoveInput.x * player.moveSpeed);
+        player.SetVelocity(player.MoveInput.x * player.moveSpeed, player.RB.linearVelocity.y);
     }
 }
 

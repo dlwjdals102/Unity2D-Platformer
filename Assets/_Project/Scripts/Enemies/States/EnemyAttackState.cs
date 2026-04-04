@@ -12,7 +12,7 @@ public class EnemyAttackState : EnemyState
         base.Enter();
 
         // 공격할 때는 미끄러지지 않도록 X축 속도를 강제로 0으로 멈춥니다.
-        enemy.SetVelocityX(0f);
+        enemy.SetVelocity(0f, enemy.RB.linearVelocity.y);
     }
 
     public override void Update()

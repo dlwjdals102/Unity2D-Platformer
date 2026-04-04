@@ -10,7 +10,7 @@ public class PlayerJumpState : PlayerAirborneState
     {
         base.Enter();
 
-        player.SetVelocityY(player.jumpForce);
+        player.SetVelocity(player.RB.linearVelocity.x, player.jumpForce);
 
         // 점프를 실행했으므로 선입력 타이머를 즉시 초기화
         player.UseJumpBuffer();
@@ -26,7 +26,7 @@ public class PlayerJumpState : PlayerAirborneState
         if (player.CurrentVelocityY > 0 && !player.IsJumpButtonHeld)
         {
             // 상승 속도를 확 줄여서(예: 50%) 더 이상 높이 못 올라가게 만듭니다.
-            player.SetVelocityY(player.CurrentVelocityY * player.jumpCutMultiplier);
+            player.SetVelocity(player.RB.linearVelocity.x, player.CurrentVelocityY * player.jumpCutMultiplier);
         }
 
         // 정점을 찍고 떨어지기 시작하면 Fall 상태로 전환

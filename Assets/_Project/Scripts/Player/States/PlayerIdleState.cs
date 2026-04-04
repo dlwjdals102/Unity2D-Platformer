@@ -11,7 +11,7 @@ public class PlayerIdleState : PlayerGroundedState
         base.Enter();
 
         // 대기 상태 진입 시 X축 속도만 0으로 깔끔하게 초기화
-        player.RB.linearVelocityX = 0f;
+        player.SetVelocity(0f, player.RB.linearVelocity.y);
     }
 
     public override void Update()

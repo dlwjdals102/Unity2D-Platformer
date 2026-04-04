@@ -43,6 +43,6 @@ public class PlayerAirborneState : PlayerState
 
         // moveSpeed는 추후 PlayerController의 스탯으로 빼는 것이 좋습니다.
         float moveSpeed = 8f;
-        player.SetVelocityX(player.MoveInput.x * moveSpeed);
+        player.SetVelocity(player.MoveInput.x * moveSpeed, player.RB.linearVelocity.y);
     }
 }

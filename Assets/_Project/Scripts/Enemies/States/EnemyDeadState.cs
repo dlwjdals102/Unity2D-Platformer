@@ -12,7 +12,7 @@ public class EnemyDeadState : EnemyState
         base.Enter();
 
         // 1. 죽었으므로 모든 움직임을 즉시 멈춥니다.
-        enemy.SetVelocity(0f, 0f);
+        enemy.ZeroVelocity();
 
         // 2. 핵심: 플레이어가 시체를 통과할 수 있도록 콜라이더를 비활성화합니다.
         Collider2D coll = enemy.GetComponent<Collider2D>();

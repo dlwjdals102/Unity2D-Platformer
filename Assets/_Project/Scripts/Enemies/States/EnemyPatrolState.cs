@@ -39,6 +39,6 @@ public class EnemyPatrolState : EnemyState
         }
 
         // [이동 로직] 현재 바라보는 방향(FacingDirection)으로 순찰 속도만큼 걷기
-        enemy.SetVelocityX(enemy.patrolSpeed * enemy.FacingDirection);
+        enemy.SetVelocity(enemy.patrolSpeed * enemy.FacingDirection, enemy.RB.linearVelocity.y);
     }
 }

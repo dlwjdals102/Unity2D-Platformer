@@ -15,7 +15,7 @@ public class PlayerDeadState : PlayerState
         base.Enter();
 
         // 1. 죽었으므로 모든 물리적인 움직임을 즉시 멈춥니다.
-        player.SetVelocity(0f, 0f);
+        player.ZeroVelocity();
 
         // 현재 레이어를 백업해두고, 무적 레이어로 변경합니다.
         originalLayer = player.gameObject.layer;
@@ -33,7 +33,7 @@ public class PlayerDeadState : PlayerState
         {
             // 현재 활성화된 씬의 이름을 가져와서 다시 로드(재도전)합니다.
             // 나중에는 이 부분에 'GameManager.ShowGameOverUI()' 같은 코드가 들어갈 수 있습니다.
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            GameManager.Instance.RespawnPlayer();
         }
     }
 

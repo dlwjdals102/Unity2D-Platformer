@@ -44,7 +44,7 @@ public class EnemyChaseState : EnemyState
         // 길이 막혔다면 즉시 추적을 멈추고 순찰로 복귀합니다.
         if (!enemy.IsLedgeDetected() || enemy.IsWallDetected())
         {
-            enemy.SetVelocityX(0f);
+            enemy.SetVelocity(0f, enemy.RB.linearVelocity.y);
             return;
         }
 
@@ -52,12 +52,12 @@ public class EnemyChaseState : EnemyState
         if (enemy.IsPlayerInAttackRange())
         {
             // 플레이어에게 겹치지 않게 제자리에 서서 노려봅니다 (숨 고르기)
-            enemy.SetVelocityX(0f);
+            enemy.SetVelocity(0f, enemy.RB.linearVelocity.y);
         }
         else
         {
             // 사거리 밖이라면 다시 쫓아갑니다.
-            enemy.SetVelocityX(enemy.chaseSpeed * enemy.FacingDirection);
+            enemy.SetVelocity(enemy.chaseSpeed * enemy.FacingDirection, enemy.RB.linearVelocity.y);
         }
 
     }

@@ -1,7 +1,7 @@
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
-public class Enemy : Entity
+public abstract class Enemy : Entity
 {
     // ==========================================
     // 1. 상태 머신 및 상태 인스턴스
@@ -13,20 +13,20 @@ public class Enemy : Entity
     public EnemyHurtState HurtState { get; private set; }
     public EnemyDeadState DeadState { get; private set; }
 
-    [Header("AI Settings")]
-    public float patrolSpeed = 3f;
-    public float chaseSpeed = 5f;
+    [Header("Base AI Settings")]
+    public float patrolSpeed = 2f;
+    public float chaseSpeed = 4f;
+    public float attackDistance = 1.5f;
     public float detectionDistance = 8f;
+    public float attackCooldown = 2f;
+    [HideInInspector] public float lastAttackTime;
 
+    // 감지 센서 세팅 추가!
     [Header("Detection Setup")]
-    [SerializeField] private LayerMask playerLayer;
-    [SerializeField] private Transform ledgeCheck; // 낭떠러지 감지 전용 위치 (발끝 앞쪽)
-
-    [Header("Attack Settings")]
-    public float attackDamage = 10f;
-    public float attackDistance = 1.5f; // 공격 사거리
-    public float attackCooldown = 2.0f; // 공격을 한 번 하면 2초 동안 쉰다
-    public float lastAttackTime;        // 마지막으로 공격한 시간 기록
+    public LayerMask playerLayer;        // 플레이어를 감지할 레이어
+    public Transform ledgeCheck;         // 절벽 감지용 빈 오브젝트 (몬스터 앞쪽 발밑)
+    public Transform playerCheck;        // 시야 감지 기준점 (보통 몬스터의 눈 위치)
+    public float ledgeCheckDistance = 0.5f;
 
     protected override void Awake()
     {
@@ -65,12 +65,11 @@ public class Enemy : Entity
     // ==========================================
     public bool IsLedgeDetected() => Physics2D.Raycast(ledgeCheck.position, Vector2.down, 1f, groundLayer);
 
-
     public bool IsPlayerInSight()
     {
         // 벽(groundLayer)과 플레이어(playerLayer)를 모두 감지하도록 LayerMask를 합칩니다.
         LayerMask mask = playerLayer | groundLayer;
-        RaycastHit2D hit = Physics2D.Raycast(wallCheck.position, transform.right, detectionDistance, mask);
+        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, detectionDistance, mask);
 
         if (hit.collider != null)
         {
@@ -88,7 +87,7 @@ public class Enemy : Entity
     public bool IsPlayerInAttackRange()
     {
         LayerMask mask = playerLayer | groundLayer;
-        RaycastHit2D hit = Physics2D.Raycast(wallCheck.position, transform.right, attackDistance, mask);
+        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, attackDistance, mask);
 
         if (hit.collider != null && (playerLayer.value & (1 << hit.collider.gameObject.layer)) > 0)
         {
@@ -106,11 +105,7 @@ public class Enemy : Entity
         if (stateMachine.CurrentState == DeadState) return;
         if (stateMachine.CurrentState == HurtState) return;
 
-        currentHealth -= damage;
-        Debug.Log($"[적 피격] 남은 체력: {currentHealth}");
-
-        // 체력이 깎였으니 UI들에게 방송 송출!
-        NotifyHealthChanged();
+        base.TakeDamage(damage);
 
         if (currentHealth <= 0)
         {
@@ -128,20 +123,10 @@ public class Enemy : Entity
     // 애니메이션 이벤트 전용 브릿지 함수들
     // ==========================================
     // 공격 애니메이션의 '타격 프레임'에 호출할 함수
-    public void TriggerAttack()
-    {
-        // 공격 사거리 내에 있는 플레이어 감지 (OverlapCircle을 써도 좋고, Raycast를 써도 됩니다)
-        Collider2D playerCollider = Physics2D.OverlapCircle(wallCheck.position, attackDistance, playerLayer);
 
-        if (playerCollider != null)
-        {
-            IDamageable damageable = playerCollider.GetComponent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(attackDamage);
-            }
-        }
-    }
+    //  핵심: 자식 클래스(Melee, Ranged)가 반드시 스스로 구현해야 하는 단 하나의 함수!
+    // 애니메이션 이벤트(Animation Event)에서 이 함수를 호출합니다.
+    public abstract void PerformAttack();
 
     // 공격 애니메이션의 '마지막 프레임'에 호출할 함수
     public void AnimationFinishTrigger()
@@ -155,19 +140,19 @@ public class Enemy : Entity
     {
         base.OnDrawGizmos();
 
-        if (wallCheck != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(wallCheck.position, wallCheck.position + transform.right * detectionDistance); // 시야
-
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(wallCheck.position, attackDistance); // 공격 범위 원형 시각화
-        }
-
         if (ledgeCheck != null)
         {
             Gizmos.color = Color.blue; // 낭떠러지 감지선은 파란색
             Gizmos.DrawLine(ledgeCheck.position, ledgeCheck.position + Vector3.down * 1f);
+        }
+
+        if (playerCheck != null)
+        {
+            Gizmos.color = IsPlayerInSight() ? Color.green : Color.red; // 플레이어 감지
+            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * detectionDistance);
+
+            Gizmos.color = IsPlayerInAttackRange() ? Color.green : Color.red; // 플레이어가 '공격 사거리' 내에 있는가?
+            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * attackDistance);
         }
     }
 }

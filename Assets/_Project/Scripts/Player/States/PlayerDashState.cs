@@ -59,7 +59,7 @@ public class PlayerDashState : PlayerState
         player.SetGravityScale(player.DefaultGravity);
 
         // 대시가 끝났을 때 관성으로 미끄러지는 것을 방지하기 위해 X축 속도 초기화
-        player.SetVelocityX(0f);
+        player.SetVelocity(0f, player.RB.linearVelocity.y);
     }
 
 

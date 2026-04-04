@@ -201,6 +201,20 @@ public class PlayerController : Entity
         }
     }
 
+    public void Respawn()
+    {
+        // 1. 물리력 초기화 (떨어지던 중이었다면 멈춤)
+        ZeroVelocity();
+
+        // 2. 체력을 다시 꽉 채움 (Entity의 Heal 함수 활용)
+        RestoreFullHealth();
+
+        // 3. 죽음 상태에서 빠져나와 다시 기본 상태(Idle)로 복귀
+        stateMachine.ChangeState(IdleState);
+
+        Debug.Log("플레이어 부활 완료!");
+    }
+
     // ==========================================
     // IDamageable 인터페이스 구현 (핵심 로직)
     // ==========================================
@@ -209,12 +223,7 @@ public class PlayerController : Entity
         // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
         if (stateMachine.CurrentState == DeadState || IsInvincible || currentHealth <= 0) return;
 
-        // 2. 체력 차감
-        currentHealth -= damage;
-        Debug.Log($"[플레이어 피격] 윽! 남은 체력: {currentHealth}/{maxHealth}");
-
-        // 체력이 깎였으니 UI들에게 방송 송출!
-        NotifyHealthChanged();
+        base.TakeDamage(damage);
 
         // 4. 사망 체크 or 피격 상태로 강제 전환
         if (currentHealth <= 0)

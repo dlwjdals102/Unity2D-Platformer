@@ -12,6 +12,7 @@ public abstract class Entity : MonoBehaviour, IDamageable
     public float maxHealth = 100f;
     public float currentHealth { get; protected set; }
     public int FacingDirection { get; protected set; } = 1;
+    protected bool facingRight = true;
 
     // 체력이 변경될 때마다 발송할 이벤트 (현재 체력, 최대 체력)
     public event Action<float, float> OnHealthChanged;
@@ -22,9 +23,9 @@ public abstract class Entity : MonoBehaviour, IDamageable
     [Header("Collision Info")]
     [SerializeField] protected Transform groundCheck; // 발밑 중앙
     [SerializeField] protected float groundCheckDistance = 0.2f;
+    [SerializeField] protected LayerMask groundLayer; // 바닥/벽 레이어
     [SerializeField] protected Transform wallCheck;   // 몸 앞쪽 중앙
     [SerializeField] protected float wallCheckDistance = 0.5f;
-    [SerializeField] protected LayerMask groundLayer; // 바닥/벽 레이어
 
     // 자식 클래스들의 Awake에서 base.Awake()로 호출하여 컴포넌트를 초기화합니다.
     protected virtual void Awake()
@@ -34,10 +35,65 @@ public abstract class Entity : MonoBehaviour, IDamageable
         currentHealth = maxHealth;
     }
 
-    // --- 공통 헬퍼 함수들 ---
-    public virtual void SetVelocityX(float x) => RB.linearVelocityX = x;
-    public virtual void SetVelocityY(float y) => RB.linearVelocityY = y;
-    public virtual void SetVelocity(float x, float y) { RB.linearVelocityX = x; RB.linearVelocityY = y; }
+    #region Movement & Physics
+    public virtual void SetVelocity(float xVelocity, float yVelocity)
+    {
+        RB.linearVelocity = new Vector2(xVelocity, yVelocity);
+        //FlipController(xVelocity); // 이동 방향에 맞춰 자동으로 뒤집기
+    }
+    public void ZeroVelocity()
+    {
+        RB.linearVelocity = Vector2.zero;
+    }
+
+    #endregion
+
+    #region Combat & Health
+
+    public virtual void TakeDamage(float damage)
+    {
+        // 이미 체력이 0 이하면 데미지를 무시합니다.
+        if (currentHealth <= 0) return;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // 0 밑으로 떨어지지 않게 고정
+
+        NotifyHealthChanged(); // 체력이 깎였으니 방송 송출
+    }
+
+    public virtual void Heal(float amount)
+    {
+        // 이미 죽은 시체라면 회복할 수 없습니다.
+        if (currentHealth <= 0) return;
+
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // 최대 체력 초과 방지
+
+        NotifyHealthChanged(); // 체력이 찼으니 방송 송출
+    }
+
+    public virtual void RestoreFullHealth()
+    {
+        currentHealth = maxHealth;
+        NotifyHealthChanged(); // UI에도 즉시 알림
+    }
+
+    protected void NotifyHealthChanged()
+    {
+        // 구독자(UI)가 있다면 현재 체력과 최대 체력을 담아서 방송을 쏩니다!
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    #endregion
+
+    #region Sensors
+
+    public virtual bool IsGrounded() => Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, groundLayer);
+    public virtual bool IsWallDetected() => Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, groundLayer);
+
+    #endregion
+
+    #region Flipping
 
     public virtual void Flip()
     {
@@ -45,38 +101,13 @@ public abstract class Entity : MonoBehaviour, IDamageable
         transform.Rotate(0f, 180f, 0f);
     }
 
-    //  자식 클래스들(Player, Enemy)이 체력이 깎일 때마다 호출할 헬퍼 함수
-    protected void NotifyHealthChanged()
+    public virtual void FlipController(float moveX)
     {
-        // 구독자(UI)가 있다면 현재 체력과 최대 체력을 담아서 방송을 쏩니다!
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        if (moveX > 0 && !facingRight) Flip();
+        else if (moveX < 0 && facingRight) Flip();
     }
 
-    // ==========================================
-    // 공통 센서 함수
-    // ==========================================
-    public virtual bool IsGrounded() => Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, groundLayer);
-    public virtual bool IsWallDetected() => Physics2D.Raycast(wallCheck.position, transform.right, wallCheckDistance, groundLayer);
-    public abstract void TakeDamage(float damage);
-    public virtual void Heal(float amount)
-    {
-        // 이미 죽은 시체라면 회복할 수 없습니다.
-        if (currentHealth <= 0) return;
-
-        currentHealth += amount;
-
-        // 체력이 최대치를 넘지 않도록 고정(Clamp)합니다.
-        if (currentHealth > maxHealth)
-        {
-            currentHealth = maxHealth;
-        }
-
-        Debug.Log($"[회복] 현재 체력: {currentHealth}");
-
-        // 핵심: 체력이 변했으니 UI들에게 다시 방송을 송출합니다!
-        // 이 한 줄 덕분에 UI 스크립트를 건드릴 필요가 전혀 없습니다.
-        NotifyHealthChanged();
-    }
+    #endregion
 
     // ==========================================
     // 공통 기즈모 그리기 (자식 클래스에서도 그릴 게 있다면 override 활용)
