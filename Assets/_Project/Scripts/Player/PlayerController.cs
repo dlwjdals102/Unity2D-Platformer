@@ -1,4 +1,6 @@
 using System;
+using System.Xml;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerController : Entity
@@ -14,13 +16,12 @@ public class PlayerController : Entity
     public PlayerDashState DashState { get; private set; }
     public PlayerAttackState AttackState { get; private set; }
     public PlayerHurtState HurtState { get; private set; }
+    public PlayerDeadState DeadState { get; private set; }
 
     // ==========================================
     // 2. 핵심 컴포넌트
     // ==========================================
     [Header("Components")]
-    /*public Rigidbody2D RB { get; private set; }
-    public Animator Anim { get; private set; }*/
     private PlayerInputActions inputActions;
 
     // ==========================================
@@ -39,11 +40,6 @@ public class PlayerController : Entity
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
-
-    [Header("Ground Check Settings")]
-    [SerializeField] private Transform groundCheckPoint;
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.1f);
-    [SerializeField] private LayerMask groundLayer;
 
     [Header("Attack Settings")]
     public float attackDamage = 10f;
@@ -69,7 +65,7 @@ public class PlayerController : Entity
     public Vector2 MoveInput { get; private set; }
     public bool DashInput { get; private set; }
     public bool IsJumpButtonHeld { get; private set; }  // 점프 버튼을 누르고 있는 상태인지 확인하는 프로퍼티
-    public bool IsGrounded { get; private set; }
+    /*public bool IsGrounded { get; private set; }*/
     /*public int FacingDirection { get; private set; } = 1; */  // 1: 오른쪽, -1: 왼쪽
     public float DefaultGravity { get; private set; }
     public bool AttackInput { get; private set; }
@@ -111,6 +107,7 @@ public class PlayerController : Entity
         DashState = new PlayerDashState(this, stateMachine, "Dash");
         AttackState = new PlayerAttackState(this, stateMachine, "Attack");
         HurtState = new PlayerHurtState(this, stateMachine, "Hurt");
+        DeadState = new PlayerDeadState(this, stateMachine, "Dead");
     }
     private void InitializeInputs()
     {
@@ -140,8 +137,6 @@ public class PlayerController : Entity
     // ==========================================
     private void Update()
     {
-        // 매 프레임 먼저 바닥에 닿아있는지 센서를 통해 확인합니다.
-        CheckGrounded();
         UpdateTimers();
 
         // 이동 입력: 폴링(Polling) 방식 (매 프레임 Vector2 값을 읽어옴)
@@ -157,43 +152,29 @@ public class PlayerController : Entity
     // ==========================================
     // 7. 헬퍼 (Helper) 및 유틸리티 함수
     // ==========================================
-    private void CheckGrounded()
-    {
-        // 플레이어 발밑에 가상의 사각형(Box)을 그려서 groundLayer와 겹치는지 확인
-        IsGrounded = Physics2D.OverlapBox(groundCheckPoint.position, groundCheckSize, 0f, groundLayer);
-    }
+    
     private void UpdateTimers()
     {
         if (jumpBufferTimer > 0) jumpBufferTimer -= Time.deltaTime;
 
-        if (IsGrounded) coyoteTimer = coyoteTime;
+        if (IsGrounded()) coyoteTimer = coyoteTime;
         else if (coyoteTimer > 0) coyoteTimer -= Time.deltaTime;
 
         if (iFrameTimer > 0) iFrameTimer -= Time.deltaTime;
     }
+
     public void UseJumpBuffer() => jumpBufferTimer = 0f;
     public void UseCoyoteTime() => coyoteTimer = 0f;
     public void UseDash() { DashInput = false; dashStartTime = Time.time; }
     public void UseAttackInput() => AttackInput = false;
     public void SetGravityScale(float scale) => RB.gravityScale = scale;
-    /*public void SetVelocityX(float velocityX) => RB.linearVelocityX = velocityX;
-    public void SetVelocityY(float velocityY) => RB.linearVelocityY = velocityY;
-    public void SetVelocity(float velocityX, float velocityY)
-    {
-        RB.linearVelocityX = velocityX;
-        RB.linearVelocityY = velocityY;
-    }*/
+    
     // 공통 함수 2: 방향 전환 (Flip)
     public void CheckDirectionToFace(float xInput)
     {
         if (xInput != 0 && xInput != FacingDirection) Flip();
     }
 
-    /*private void Flip()
-    {
-        FacingDirection *= -1;
-        transform.Rotate(0f, 180f, 0f); // eulerAngles 대신 Rotate 사용으로 최적화
-    }*/
     public void AnimationFinishTrigger()
     {
         stateMachine.CurrentState.AnimationFinishTrigger();
@@ -226,40 +207,37 @@ public class PlayerController : Entity
     public override void TakeDamage(float damage)
     {
         // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
-        if (IsInvincible || currentHealth <= 0) return;
+        if (stateMachine.CurrentState == DeadState || IsInvincible || currentHealth <= 0) return;
 
         // 2. 체력 차감
         currentHealth -= damage;
         Debug.Log($"[플레이어 피격] 윽! 남은 체력: {currentHealth}/{maxHealth}");
 
-        // 3. 무적 시간 부여 (다단 히트 방지)
-        iFrameTimer = iFrameDuration;
+        // 체력이 깎였으니 UI들에게 방송 송출!
+        NotifyHealthChanged();
 
         // 4. 사망 체크 or 피격 상태로 강제 전환
         if (currentHealth <= 0)
         {
-            // Die(); // 나중에 사망 로직(PlayerDeadState)으로 교체
-            Debug.Log("플레이어 사망...");
+            stateMachine.ChangeState(DeadState);
         }
         else
         {
             // 이 부분이 FSM의 '강제 인터럽트(Interrupt)' 입니다!
             // 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다.
+
+            // 3. 무적 시간 부여 (다단 히트 방지)
+            iFrameTimer = iFrameDuration;
             stateMachine.ChangeState(HurtState);
         }
     }
 
-    // 에디터에서 센서 범위를 시각적으로 보여주는 기능
-    private void OnDrawGizmos()
-    {
-        if (groundCheckPoint != null)
-        {
-            // 땅에 닿았으면 초록색, 아니면 빨간색으로 박스를 그립니다.
-            Gizmos.color = IsGrounded ? Color.green : Color.red;
-            Gizmos.DrawWireCube(groundCheckPoint.position, groundCheckSize);
-        }
 
-        // 바닥 감지 기즈모 로직 밑에 추가
+    // 에디터에서 센서 범위를 시각적으로 보여주는 기능
+    protected override void OnDrawGizmos()
+    {
+        base.OnDrawGizmos();
+
         if (attackPoint != null)
         {
             Gizmos.color = Color.red;
@@ -267,5 +245,5 @@ public class PlayerController : Entity
         }
     }
 
-    
+
 }

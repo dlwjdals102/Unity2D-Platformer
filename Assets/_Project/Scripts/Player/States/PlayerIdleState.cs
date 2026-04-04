@@ -11,16 +11,16 @@ public class PlayerIdleState : PlayerGroundedState
         base.Enter();
 
         // 대기 상태 진입 시 X축 속도만 0으로 깔끔하게 초기화
-        entity.RB.linearVelocityX = 0f;
+        player.RB.linearVelocityX = 0f;
     }
 
     public override void Update()
     {
         base.Update();
 
-        if (Mathf.Abs(entity.MoveInput.x) > 0.01f)
+        if (Mathf.Abs(player.MoveInput.x) > 0.01f)
         {
-            stateMachine.ChangeState(entity.MoveState);
+            stateMachine.ChangeState(player.MoveState);
         }
     }
 

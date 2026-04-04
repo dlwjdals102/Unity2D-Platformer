@@ -16,18 +16,18 @@ public class PlayerMoveState : PlayerGroundedState
 
         if (Mathf.Abs(entity.MoveInput.x) < 0.01f)
         {
-            stateMachine.ChangeState(entity.IdleState);
+            stateMachine.ChangeState(player.IdleState);
             return;
         }
 
-        entity.CheckDirectionToFace(entity.MoveInput.x);
+        player.CheckDirectionToFace(player.MoveInput.x);
     }
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        entity.SetVelocityX(entity.MoveInput.x * entity.moveSpeed);
+        player.SetVelocityX(player.MoveInput.x * player.moveSpeed);
     }
 }
 

@@ -20,7 +20,7 @@ public abstract class State<T> where T : Entity
         // T 타입이 무엇이든 Animator를 가지고 있다고 가정하거나, 
         // 하단에 설명할 공통 인터페이스/베이스를 활용해 접근합니다.
         // 여기서는 직관성을 위해 직접 접근 방식을 예로 듭니다.
-        GetAnimator(entity).SetBool(animBoolHash, true);
+        entity.Anim.SetBool(animBoolHash, true);
         isAnimationFinished = false;
 
     }
@@ -35,11 +35,8 @@ public abstract class State<T> where T : Entity
     public virtual void Exit()
     {
         // 상태 종료 시 해당 애니메이션 Bool 파라미터를 false로 만듭니다.
-        GetAnimator(entity).SetBool(animBoolHash, false);
+        entity.Anim.SetBool(animBoolHash, false);
     }
 
     public virtual void AnimationFinishTrigger() => isAnimationFinished = true;
-
-    // 공통으로 Animator를 가져오기 위한 헬퍼 (또는 entity.GetComponent 사용)
-    private Animator GetAnimator(T entity) => entity.GetComponent<Animator>();
 }
