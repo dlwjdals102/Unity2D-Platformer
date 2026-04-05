@@ -8,17 +8,24 @@ public class Projectile : MonoBehaviour
     public float lifeTime = 3f;     // 3초 뒤 자동 소멸 (화면 밖으로 날아간 투사체 정리)
 
     private Rigidbody2D rb;
-    private float actualDamage; // 인스펙터에서 빼고, 발사자가 넘겨준 데미지를 기억할 변수
+    private float actualDamage; // 발사자가 넘겨준 데미지를 기억할 변수
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void Start()
+    // (풀에서 꺼내져 활성화될 때마다 실행됨)
+    private void OnEnable()
     {
-        // 맵 끝까지 날아가서 영원히 메모리를 차지하는 것을 방지하기 위한 타이머입니다.
-        Destroy(gameObject, lifeTime);
+        // lifeTime 뒤에 Deactivate 함수를 실행하도록 예약합니다.
+        Invoke(nameof(Deactivate), lifeTime);
+    }
+
+    private void OnDisable()
+    {
+        // 비활성화될 때 예약된 타이머를 취소합니다. (버그 방지)
+        CancelInvoke();
     }
 
     // 몬스터가 이 투사체를 소환(Instantiate)한 직후에 호출할 함수입니다.
@@ -42,7 +49,7 @@ public class Projectile : MonoBehaviour
         if (player != null)
         {
             player.TakeDamage(actualDamage);
-            Destroy(gameObject); // 데미지를 입히고 파괴
+            Deactivate(); // Destroy 대신 비활성화!
             return; // 아래 코드를 실행하지 않고 바로 종료
         }
 
@@ -51,7 +58,13 @@ public class Projectile : MonoBehaviour
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
             // TODO: 나중에 '벽에 화살이 박히는 이펙트'나 '흙먼지 파티클'을 넣기 좋은 위치입니다.
-            Destroy(gameObject);
+            Deactivate(); // Destroy 대신 비활성화!
         }
+    }
+
+    // 파괴하지 않고 꺼버리기만 하는 헬퍼 함수
+    private void Deactivate()
+    {
+        gameObject.SetActive(false);
     }
 }

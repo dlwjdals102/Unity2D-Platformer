@@ -30,7 +30,7 @@ public class HealthPotion : MonoBehaviour
         PlayerController player = collision.GetComponent<PlayerController>();
 
         // 플레이어가 맞고(AND) 체력이 꽉 차지 않은 상태라면?
-        if (player != null && player.currentHealth < player.maxHealth)
+        if (player != null && player.CurrentHealth < player.MaxHealth)
         {
             // 1. 플레이어 회복!
             player.Heal(healAmount);

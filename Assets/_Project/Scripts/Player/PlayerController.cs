@@ -27,22 +27,15 @@ public class PlayerController : Entity
     // ==========================================
     // 3. 캐릭터 스탯 세팅 (기획자 조절용)
     // ==========================================
-    [Header("Movement Settings")]
-    public float moveSpeed = 8f;
+    [Header("Data")]
+    [field: SerializeField] public PlayerData Data { get; protected set; } // 데이터 컨테이너 연결
 
     [Header("Jump Settings")]
-    public float jumpForce = 15f;
     public float jumpBufferTime = 0.2f; // 선입력 유효 시간
     public float coyoteTime = 0.1f;
     public float jumpCutMultiplier = 0.5f;
 
-    [Header("Dash Settings")]
-    public float dashSpeed = 20f;
-    public float dashDuration = 0.2f;
-    public float dashCooldown = 1f;
-
     [Header("Attack Settings")]
-    public float attackDamage = 10f;
     [SerializeField] private Transform attackPoint; // 타격 중심점 (무기 끝부분 등에 빈 오브젝트로 위치)
     [SerializeField] private float attackRadius = 0.8f; // 타격 반경 (원형)
     [SerializeField] private LayerMask enemyLayer; // 적을 판별할 레이어
@@ -53,9 +46,6 @@ public class PlayerController : Entity
     public float lastAttackTime = -100f; // 마지막으로 공격이 끝난 시간
 
     [Header("Health & Defense Settings")]
-    /*public float maxHealth = 100f;
-    public float currentHealth { get; private set; }*/
-    public float iFrameDuration = 1f; // 피격 후 무적 시간 (1초)
     private float iFrameTimer;
 
     // ==========================================
@@ -65,8 +55,6 @@ public class PlayerController : Entity
     public Vector2 MoveInput { get; private set; }
     public bool DashInput { get; private set; }
     public bool IsJumpButtonHeld { get; private set; }  // 점프 버튼을 누르고 있는 상태인지 확인하는 프로퍼티
-    /*public bool IsGrounded { get; private set; }*/
-    /*public int FacingDirection { get; private set; } = 1; */  // 1: 오른쪽, -1: 왼쪽
     public float DefaultGravity { get; private set; }
     public bool AttackInput { get; private set; }
 
@@ -78,7 +66,7 @@ public class PlayerController : Entity
     // 프로퍼티 (조건문 간소화용)
     public bool HasJumpInputBuffer => jumpBufferTimer > 0;
     public bool CanCoyoteJump => coyoteTimer > 0;
-    public bool CanDash => Time.time >= dashStartTime + dashCooldown;
+    public bool CanDash => Time.time >= dashStartTime + Data.dashCooldown;
     public float CurrentVelocityY => RB.linearVelocityY;
     public bool IsInvincible => iFrameTimer > 0 || stateMachine.CurrentState == DashState;   // 무적 상태인지 확인하는 프로퍼티
 
@@ -88,11 +76,11 @@ public class PlayerController : Entity
     protected override void Awake()
     {
         base.Awake();
-        /*RB = GetComponent<Rigidbody2D>();
-        Anim = GetComponent<Animator>();*/
 
         DefaultGravity = RB.gravityScale; // 시작할 때 인스펙터에 설정된 중력값 기억
-        currentHealth = maxHealth;
+
+        BaseMaxHealth = Data.maxHealth;
+        CurrentHealth = MaxHealth;
 
         InitializeStateMachine();
         InitializeInputs();
@@ -193,8 +181,8 @@ public class PlayerController : Entity
             IDamageable damageable = enemyCollider.GetComponent<IDamageable>();
             if (damageable != null)
             {
-                damageable.TakeDamage(attackDamage);
-                Debug.Log($"적 타격 성공! 데미지: {attackDamage}");
+                damageable.TakeDamage(Data.attackDamage);
+                Debug.Log($"적 타격 성공! 데미지: {Data.attackDamage}");
 
                 // TODO: 나중에 여기에 타격 이펙트(Particle)나 카메라 쉐이크(Camera Shake) 호출 로직을 추가하면 됩니다.
             }
@@ -221,12 +209,12 @@ public class PlayerController : Entity
     public override void TakeDamage(float damage)
     {
         // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
-        if (stateMachine.CurrentState == DeadState || IsInvincible || currentHealth <= 0) return;
+        if (stateMachine.CurrentState == DeadState || IsInvincible || CurrentHealth <= 0) return;
 
         base.TakeDamage(damage);
 
         // 4. 사망 체크 or 피격 상태로 강제 전환
-        if (currentHealth <= 0)
+        if (CurrentHealth <= 0)
         {
             stateMachine.ChangeState(DeadState);
         }
@@ -236,7 +224,7 @@ public class PlayerController : Entity
             // 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다.
 
             // 3. 무적 시간 부여 (다단 히트 방지)
-            iFrameTimer = iFrameDuration;
+            iFrameTimer = Data.iFrameDuration;
             stateMachine.ChangeState(HurtState);
         }
     }

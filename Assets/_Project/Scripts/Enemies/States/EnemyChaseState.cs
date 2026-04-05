@@ -21,7 +21,7 @@ public class EnemyChaseState : EnemyState
         // 1. 공격 조건 체크 (사거리 안인가? AND 쿨타임이 다 지났는가?)
         if (enemy.IsPlayerInAttackRange())
         {
-            if (Time.time >= enemy.lastAttackTime + enemy.attackCooldown)
+            if (Time.time >= enemy.lastAttackTime + enemy.Data.attackCooldown)
             {
                 stateMachine.ChangeState(enemy.AttackState);
                 return;
@@ -57,7 +57,7 @@ public class EnemyChaseState : EnemyState
         else
         {
             // 사거리 밖이라면 다시 쫓아갑니다.
-            enemy.SetVelocity(enemy.chaseSpeed * enemy.FacingDirection, enemy.RB.linearVelocity.y);
+            enemy.SetVelocity(enemy.Data.chaseSpeed * enemy.FacingDirection, enemy.RB.linearVelocity.y);
         }
 
     }

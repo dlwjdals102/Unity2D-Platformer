@@ -13,12 +13,10 @@ public abstract class Enemy : Entity
     public EnemyHurtState HurtState { get; private set; }
     public EnemyDeadState DeadState { get; private set; }
 
+    [Header("Data")]
+    [field: SerializeField] public EnemyData Data { get; protected set; } // 데이터 컨테이너 연결
+
     [Header("Base AI Settings")]
-    public float patrolSpeed = 2f;
-    public float chaseSpeed = 4f;
-    public float attackDistance = 1.5f;
-    public float detectionDistance = 8f;
-    public float attackCooldown = 2f;
     [HideInInspector] public float lastAttackTime;
 
     // 감지 센서 세팅 추가!
@@ -67,9 +65,11 @@ public abstract class Enemy : Entity
 
     public bool IsPlayerInSight()
     {
+        if (Data == null) return false;
+
         // 벽(groundLayer)과 플레이어(playerLayer)를 모두 감지하도록 LayerMask를 합칩니다.
         LayerMask mask = playerLayer | groundLayer;
-        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, detectionDistance, mask);
+        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, Data.detectionDistance, mask);
 
         if (hit.collider != null)
         {
@@ -86,8 +86,10 @@ public abstract class Enemy : Entity
     // 플레이어가 '공격 사거리' 내에 있는가?
     public bool IsPlayerInAttackRange()
     {
+        if (Data == null) return false;
+
         LayerMask mask = playerLayer | groundLayer;
-        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, attackDistance, mask);
+        RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, Data.attackDistance, mask);
 
         if (hit.collider != null && (playerLayer.value & (1 << hit.collider.gameObject.layer)) > 0)
         {
@@ -107,7 +109,7 @@ public abstract class Enemy : Entity
 
         base.TakeDamage(damage);
 
-        if (currentHealth <= 0)
+        if (CurrentHealth <= 0)
         {
             // 체력이 다 닳았다면 사망 상태로 강제 전환!
             stateMachine.ChangeState(DeadState);
@@ -122,10 +124,8 @@ public abstract class Enemy : Entity
     // ==========================================
     // 애니메이션 이벤트 전용 브릿지 함수들
     // ==========================================
-    // 공격 애니메이션의 '타격 프레임'에 호출할 함수
 
-    //  핵심: 자식 클래스(Melee, Ranged)가 반드시 스스로 구현해야 하는 단 하나의 함수!
-    // 애니메이션 이벤트(Animation Event)에서 이 함수를 호출합니다.
+    // 공격 애니메이션의 '타격 프레임'에 호출할 함수
     public abstract void PerformAttack();
 
     // 공격 애니메이션의 '마지막 프레임'에 호출할 함수
@@ -146,13 +146,13 @@ public abstract class Enemy : Entity
             Gizmos.DrawLine(ledgeCheck.position, ledgeCheck.position + Vector3.down * 1f);
         }
 
-        if (playerCheck != null)
+        if (playerCheck != null && Data != null)
         {
             Gizmos.color = IsPlayerInSight() ? Color.green : Color.red; // 플레이어 감지
-            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * detectionDistance);
+            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * Data.detectionDistance);
 
             Gizmos.color = IsPlayerInAttackRange() ? Color.green : Color.red; // 플레이어가 '공격 사거리' 내에 있는가?
-            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * attackDistance);
+            Gizmos.DrawLine(playerCheck.position, playerCheck.position + transform.right * Data.attackDistance);
         }
     }
 }

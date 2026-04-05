@@ -14,7 +14,7 @@ public class PlayerDashState : PlayerState
         base.Enter();
 
         player.UseDash(); // 대시 입력 소비 및 쿨타임 초기화
-        dashTimer = entity.dashDuration; // 타이머 설정
+        dashTimer = player.Data.dashDuration; // 타이머 설정
 
         // 1. 방향 결정: 키보드를 누르고 있으면 그 방향, 안 누르고 있으면 현재 바라보는 방향
         if (player.MoveInput.x != 0)
@@ -48,7 +48,7 @@ public class PlayerDashState : PlayerState
         base.FixedUpdate();
 
         // Y축 속도는 0으로 고정, X축으로만 고속 이동
-        player.SetVelocity(dashDirection * player.dashSpeed, 0f);
+        player.SetVelocity(dashDirection * player.Data.dashSpeed, 0f);
     }
 
     public override void Exit()

@@ -10,7 +10,7 @@ public class PlayerJumpState : PlayerAirborneState
     {
         base.Enter();
 
-        player.SetVelocity(player.RB.linearVelocity.x, player.jumpForce);
+        player.SetVelocity(player.RB.linearVelocity.x, player.Data.jumpForce);
 
         // 점프를 실행했으므로 선입력 타이머를 즉시 초기화
         player.UseJumpBuffer();
