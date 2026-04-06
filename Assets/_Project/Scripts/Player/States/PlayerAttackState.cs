@@ -14,7 +14,7 @@ public class PlayerAttackState : PlayerState
 
         player.UseAttackInput();
         // 지상 공격이므로 미끄러지지 않도록 X축 속도를 즉시 0으로 만듭니다.
-        player.SetVelocity(0f, player.RB.linearVelocity.y);
+        player.Movement.SetVelocity(0f, player.Movement.RB.linearVelocity.y);
         comboInputRegistered = false;
 
         // 현재 몇 단 공격인지 애니메이터에게 숫자로 알려줍니다!

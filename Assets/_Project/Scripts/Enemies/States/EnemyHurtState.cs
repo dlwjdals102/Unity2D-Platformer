@@ -15,7 +15,7 @@ public class EnemyHurtState : EnemyState
         base.Enter();
 
         // 피격 시 플레이어가 바라보는 반대 방향으로 넉백!
-        enemy.SetVelocity(-enemy.FacingDirection * knockbackForceX, knockbackForceY);
+        enemy.Movement.SetVelocity(-enemy.Movement.FacingDirection * knockbackForceX, knockbackForceY);
     }
 
     public override void Update()
@@ -23,7 +23,7 @@ public class EnemyHurtState : EnemyState
         base.Update();
 
         // 공중에 떠 있는 동안에는 아무것도 못 하고 굳은 채로 떨어지게 됩니다.
-        if (isAnimationFinished && enemy.IsGrounded())
+        if (isAnimationFinished && enemy.Movement.IsGrounded())
         {
             stateMachine.ChangeState(enemy.ChaseState);
         }

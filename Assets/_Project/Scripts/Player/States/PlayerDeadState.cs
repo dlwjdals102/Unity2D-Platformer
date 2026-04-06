@@ -15,7 +15,7 @@ public class PlayerDeadState : PlayerState
         base.Enter();
 
         // 1. 죽었으므로 모든 물리적인 움직임을 즉시 멈춥니다.
-        player.ZeroVelocity();
+        player.Movement.ZeroVelocity();
 
         // 현재 레이어를 백업해두고, 무적 레이어로 변경합니다.
         originalLayer = player.gameObject.layer;

@@ -20,14 +20,14 @@ public class PlayerMoveState : PlayerGroundedState
             return;
         }
 
-        player.CheckDirectionToFace(player.MoveInput.x);
+        player.Movement.FlipController(player.MoveInput.x);
     }
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        player.SetVelocity(player.MoveInput.x * player.Data.moveSpeed, player.RB.linearVelocity.y);
+        player.Movement.SetVelocity(player.MoveInput.x * player.Data.moveSpeed, player.Movement.RB.linearVelocity.y);
     }
 }
 

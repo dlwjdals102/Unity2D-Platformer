@@ -30,10 +30,10 @@ public class HealthPotion : MonoBehaviour
         PlayerController player = collision.GetComponent<PlayerController>();
 
         // 플레이어가 맞고(AND) 체력이 꽉 차지 않은 상태라면?
-        if (player != null && player.CurrentHealth < player.MaxHealth)
+        if (player != null && player.Health.CurrentHealth < player.Health.MaxHealth)
         {
             // 1. 플레이어 회복!
-            player.Heal(healAmount);
+            player.Health.Heal(healAmount);
 
             // TODO: 나중에 여기에 '반짝!' 하는 파티클 이펙트나 '띠링~' 하는 사운드를 넣기 좋습니다.
 

@@ -30,15 +30,15 @@ public class EnemyPatrolState : EnemyState
         base.FixedUpdate();
 
         // 공중에 떠 있을 때는 순찰 로직(낭떠러지 체크 및 뒤돌기)을 완전히 멈춥니다!
-        if (!enemy.IsGrounded()) return;
+        if (!enemy.Movement.IsGrounded()) return;
 
         // [센서 확인 2] 앞에 바닥이 없거나(낭떠러지) 벽이 있는가?
-        if (!enemy.IsLedgeDetected() || enemy.IsWallDetected())
+        if (!enemy.IsLedgeDetected() || enemy.Movement.IsWallDetected())
         {
-            enemy.Flip(); // 스스로 180도 회전!
+            enemy.Movement.Flip(); // 스스로 180도 회전!
         }
 
         // [이동 로직] 현재 바라보는 방향(FacingDirection)으로 순찰 속도만큼 걷기
-        enemy.SetVelocity(enemy.Data.patrolSpeed * enemy.FacingDirection, enemy.RB.linearVelocity.y);
+        enemy.Movement.SetVelocity(enemy.Data.patrolSpeed * enemy.Movement.FacingDirection, enemy.Movement.RB.linearVelocity.y);
     }
 }

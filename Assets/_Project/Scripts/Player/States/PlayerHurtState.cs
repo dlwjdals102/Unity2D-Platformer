@@ -15,8 +15,8 @@ public class PlayerHurtState : PlayerState
 
         // 진입하자마자 X, Y축 속도를 강제로 덮어씌워서 넉백 적용!
         // (지금은 자신이 바라보는 방향의 반대쪽으로 밀려나게 세팅합니다)
-        float knockbackDir = -player.FacingDirection;
-        player.SetVelocity(knockbackDir * knockbackForceX, knockbackForceY);
+        float knockbackDir = -player.Movement.FacingDirection;
+        player.Movement.SetVelocity(knockbackDir * knockbackForceX, knockbackForceY);
     }
 
     public override void Update()

@@ -48,7 +48,7 @@ public class Projectile : MonoBehaviour
         PlayerController player = collision.GetComponent<PlayerController>();
         if (player != null)
         {
-            player.TakeDamage(actualDamage);
+            player.Health.TakeDamage(actualDamage);
             Deactivate(); // Destroy 대신 비활성화!
             return; // 아래 코드를 실행하지 않고 바로 종료
         }

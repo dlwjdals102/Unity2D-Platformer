@@ -25,7 +25,7 @@ public class PlayerAirborneState : PlayerState
         }
 
         // 착지 로직
-        if (player.IsGrounded() && player.CurrentVelocityY < 0.1f)
+        if (player.Movement.IsGrounded() && player.CurrentVelocityY < 0.1f)
         {
             if (Mathf.Abs(player.MoveInput.x) > 0.01f)
                 stateMachine.ChangeState(player.MoveState);
@@ -39,10 +39,10 @@ public class PlayerAirborneState : PlayerState
         base.FixedUpdate();
 
         // 공중에서도 방향을 전환하고 좌우로 움직일 수 있도록 공통 처리 (Air Control)
-        player.CheckDirectionToFace(player.MoveInput.x);
+        player.Movement.FlipController(player.MoveInput.x);
 
         // moveSpeed는 추후 PlayerController의 스탯으로 빼는 것이 좋습니다.
         float moveSpeed = 8f;
-        player.SetVelocity(player.MoveInput.x * moveSpeed, player.RB.linearVelocity.y);
+        player.Movement.SetVelocity(player.MoveInput.x * moveSpeed, player.Movement.RB.linearVelocity.y);
     }
 }

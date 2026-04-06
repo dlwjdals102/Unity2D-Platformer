@@ -7,6 +7,9 @@ public class HealthBarUI : MonoBehaviour
     // PlayerController나 Enemy가 아닌 부모 'Entity'를 받습니다! (핵심 범용성)
     [SerializeField] private Entity targetEntity;
 
+    // 내부적으로 체력 컴포넌트만 따로 캐싱해서 사용합니다!
+    private HealthComponent targetHealth;
+
     [Header("UI Components")]
     // 이 컨테이너의 크기를 늘리면 하위 이미지 3개(Background, Red, Green)가 모두 같이 늘어납니다.
     public RectTransform healthBarContainer;
@@ -20,17 +23,27 @@ public class HealthBarUI : MonoBehaviour
     public float pixelsPerHealthUnit = 2f;
     public float redCatchupSpeed = 5f; // 붉은색 게이지가 따라잡는 속도
 
+    private void Awake()
+    {
+        // 1. 할당된 Entity가 있다면, 그 안에서 HealthComponent만 빼옵니다.
+        if (targetEntity != null)
+        {
+            // Entity의 Awake가 먼저 실행되었는지 확신할 수 없으므로 GetComponent로 안전하게 찾습니다.
+            targetHealth = targetEntity.GetComponent<HealthComponent>();
+        }
+    }
+
     private void Start()
     {
         // 게임 시작 시, 체력바를 꽉 찬 상태로 초기화합니다.
-        if (targetEntity != null)
+        if (targetHealth != null)
         {
-            UpdateHealthBar(targetEntity.CurrentHealth, targetEntity.MaxHealth);
+            UpdateHealthBar(targetHealth.CurrentHealth, targetHealth.MaxHealth);
 
             // 시작 시 붉은색 게이지도 초록색과 동일하게 꽉 찬 상태로 맞춤
-            if (targetEntity.MaxHealth > 0)
+            if (targetHealth.MaxHealth > 0)
             {
-                fillRed.fillAmount = targetEntity.CurrentHealth / targetEntity.MaxHealth;
+                fillRed.fillAmount = targetHealth.CurrentHealth / targetHealth.MaxHealth;
             }
         }
     }
@@ -38,18 +51,18 @@ public class HealthBarUI : MonoBehaviour
     // 오브젝트가 활성화될 때 이벤트를 '구독'합니다.
     private void OnEnable()
     {
-        if (targetEntity != null)
+        if (targetHealth != null)
         {
-            targetEntity.OnHealthChanged += UpdateHealthBar;
+            targetHealth.OnHealthChanged += UpdateHealthBar;
         }
     }
 
     // 오브젝트가 비활성화될 때 이벤트를 '구독 취소'합니다. (메모리 누수 방지!)
     private void OnDisable()
     {
-        if (targetEntity != null)
+        if (targetHealth != null)
         {
-            targetEntity.OnHealthChanged -= UpdateHealthBar;
+            targetHealth.OnHealthChanged -= UpdateHealthBar;
         }
     }
 

@@ -30,7 +30,42 @@ public abstract class Enemy : Entity
     {
         base.Awake(); // 부모(Entity)의 Awake 호출: RB, Anim, 체력 자동 초기화
 
+        // SO 데이터 주입 및 초기화 (무적 시간 없음)
+        if (Data != null)
+        {
+            Health.Initialize(Data.maxHealth);
+        }
+
+        // 피격 및 사망 이벤트 구독
+        if (Health != null)
+        {
+            Health.OnTakeDamage += HandleTakeDamage;
+            Health.OnDeath += HandleDeath;
+        }
+
+        // 애니메이션 이벤트 구독!
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered += HandleTriggerAttack; // 자식 클래스(Melee, Ranged)에서 구현한 그 공격!
+            AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
+        }
+
         InitializeStateMachine();
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        if (Health != null)
+        {
+            Health.OnTakeDamage -= HandleTakeDamage;
+            Health.OnDeath -= HandleDeath;
+        }
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered -= HandleTriggerAttack;
+            AnimHandler.OnAnimationFinished -= HandleAnimationFinishTrigger;
+        }
     }
 
     private void InitializeStateMachine()
@@ -61,14 +96,15 @@ public abstract class Enemy : Entity
     // ==========================================
     // AI 센서 (눈과 귀)
     // ==========================================
-    public bool IsLedgeDetected() => Physics2D.Raycast(ledgeCheck.position, Vector2.down, 1f, groundLayer);
+    public bool IsLedgeDetected() => Physics2D.Raycast(ledgeCheck.position, Vector2.down, 1f, Movement.GroundLayer);
 
     public bool IsPlayerInSight()
     {
         if (Data == null) return false;
+        if (Movement == null) return false;
 
         // 벽(groundLayer)과 플레이어(playerLayer)를 모두 감지하도록 LayerMask를 합칩니다.
-        LayerMask mask = playerLayer | groundLayer;
+        LayerMask mask = playerLayer | Movement.GroundLayer;
         RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, Data.detectionDistance, mask);
 
         if (hit.collider != null)
@@ -87,8 +123,9 @@ public abstract class Enemy : Entity
     public bool IsPlayerInAttackRange()
     {
         if (Data == null) return false;
+        if (Movement == null) return false;
 
-        LayerMask mask = playerLayer | groundLayer;
+        LayerMask mask = playerLayer | Movement.GroundLayer;
         RaycastHit2D hit = Physics2D.Raycast(playerCheck.position, transform.right, Data.attackDistance, mask);
 
         if (hit.collider != null && (playerLayer.value & (1 << hit.collider.gameObject.layer)) > 0)
@@ -99,26 +136,36 @@ public abstract class Enemy : Entity
     }
 
     // ==========================================
-    // Entity의 추상 메서드 구현 (피격)
+    // 피격 및 사망 로직 (이벤트 리스너)
     // ==========================================
-    public override void TakeDamage(float damage)
+    private void HandleTakeDamage()
     {
-        // 이미 죽은 상태라면 데미지를 무시합니다 (시체 다단히트 방지)
         if (stateMachine.CurrentState == DeadState) return;
-        if (stateMachine.CurrentState == HurtState) return;
 
-        base.TakeDamage(damage);
-
-        if (CurrentHealth <= 0)
+        // 역경직 및 카메라 흔들림 (정상 작동)
+        if (FeedbackManager.Instance != null && !Health.IsDead)
         {
-            // 체력이 다 닳았다면 사망 상태로 강제 전환!
-            stateMachine.ChangeState(DeadState);
+            FeedbackManager.Instance.TriggerHitStop(0.05f);
+            FeedbackManager.Instance.TriggerCameraShake(0.5f);
+        }
+
+        // 이미 피격 상태(HurtState)가 아닐 때만 상태를 전환합니다!
+        if (stateMachine.CurrentState != HurtState)
+        {
+            stateMachine.ChangeState(HurtState);
         }
         else
         {
-            // 체력이 남았다면 피격(넉백) 상태로 강제 전환!
-            stateMachine.ChangeState(HurtState);
+            // [선택 사항] 만약 연타를 맞을 때마다 몬스터가 계속 움찔거리게(Stun-lock) 만들고 싶다면,
+            // 상태를 바꾸는 대신 애니메이션만 0프레임부터 강제 재시작하게 할 수 있습니다.
+            // Anim.Play("Hurt", -1, 0f); 
         }
+    }
+
+    private void HandleDeath()
+    {
+        // 체력이 다 닳았다면 사망 상태로 강제 전환!
+        stateMachine.ChangeState(DeadState);
     }
 
     // ==========================================
@@ -126,20 +173,18 @@ public abstract class Enemy : Entity
     // ==========================================
 
     // 공격 애니메이션의 '타격 프레임'에 호출할 함수
-    public abstract void PerformAttack();
+    public abstract void HandleTriggerAttack();
 
     // 공격 애니메이션의 '마지막 프레임'에 호출할 함수
-    public void AnimationFinishTrigger()
+    public void HandleAnimationFinishTrigger()
     {
         stateMachine.CurrentState?.AnimationFinishTrigger();
     }
 
     // 에디터에서 센서 시각화
 
-    protected override void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
-        base.OnDrawGizmos();
-
         if (ledgeCheck != null)
         {
             Gizmos.color = Color.blue; // 낭떠러지 감지선은 파란색

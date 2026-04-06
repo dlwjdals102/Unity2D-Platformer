@@ -12,7 +12,7 @@ public class HeartPiece : MonoBehaviour
         if (player != null)
         {
             // 플레이어의 최대 체력을 영구적으로 증가시킴
-            player.IncreaseMaxHealth(healthIncreaseAmount);
+            player.Health.IncreaseMaxHealth(healthIncreaseAmount);
 
             // TODO: 나중에 여기에 화려한 파티클이나 사운드를 추가합니다.
             Destroy(gameObject);

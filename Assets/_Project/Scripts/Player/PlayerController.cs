@@ -35,11 +35,6 @@ public class PlayerController : Entity
     public float coyoteTime = 0.1f;
     public float jumpCutMultiplier = 0.5f;
 
-    [Header("Attack Settings")]
-    [SerializeField] private Transform attackPoint; // 타격 중심점 (무기 끝부분 등에 빈 오브젝트로 위치)
-    [SerializeField] private float attackRadius = 0.8f; // 타격 반경 (원형)
-    [SerializeField] private LayerMask enemyLayer; // 적을 판별할 레이어
-
     [Header("Combo Attack Settings")]
     public int comboCounter = 1; // 현재 몇 단 공격인지 (1, 2, 3)
     public float comboWindow = 0.5f; // 공격 후 다음 공격을 이어갈 수 있는 유예 시간
@@ -67,7 +62,7 @@ public class PlayerController : Entity
     public bool HasJumpInputBuffer => jumpBufferTimer > 0;
     public bool CanCoyoteJump => coyoteTimer > 0;
     public bool CanDash => Time.time >= dashStartTime + Data.dashCooldown;
-    public float CurrentVelocityY => RB.linearVelocityY;
+    public float CurrentVelocityY => Movement.RB.linearVelocityY;
     public bool IsInvincible => iFrameTimer > 0 || stateMachine.CurrentState == DashState;   // 무적 상태인지 확인하는 프로퍼티
 
     // ==========================================
@@ -77,14 +72,45 @@ public class PlayerController : Entity
     {
         base.Awake();
 
-        DefaultGravity = RB.gravityScale; // 시작할 때 인스펙터에 설정된 중력값 기억
+        DefaultGravity = Movement.RB.gravityScale; // 시작할 때 인스펙터에 설정된 중력값 기억
 
-        BaseMaxHealth = Data.maxHealth;
-        CurrentHealth = MaxHealth;
+        // SO 데이터 주입
+        if (Data != null)
+        {
+            Health.Initialize(Data.maxHealth, Data.iFrameDuration);
+        }
+        // 생존 이벤트 구독
+        if (Health != null)
+        {
+            Health.OnTakeDamage += HandleTakeDamage;
+            Health.OnDeath += HandleDeath;
+        }
+        // 애니메이션 이벤트 구독
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered += HandleTriggerAttack;
+            AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
+        }
 
         InitializeStateMachine();
         InitializeInputs();
     }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        if (Health != null)
+        {
+            Health.OnTakeDamage -= HandleTakeDamage;
+            Health.OnDeath -= HandleDeath;
+        }
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered -= HandleTriggerAttack;
+            AnimHandler.OnAnimationFinished -= HandleAnimationFinishTrigger;
+        }
+    }
+
     private void InitializeStateMachine()
     {
         stateMachine = new StateMachine<PlayerController>();
@@ -145,7 +171,7 @@ public class PlayerController : Entity
     {
         if (jumpBufferTimer > 0) jumpBufferTimer -= Time.deltaTime;
 
-        if (IsGrounded()) coyoteTimer = coyoteTime;
+        if (Movement.IsGrounded()) coyoteTimer = coyoteTime;
         else if (coyoteTimer > 0) coyoteTimer -= Time.deltaTime;
 
         if (iFrameTimer > 0) iFrameTimer -= Time.deltaTime;
@@ -155,92 +181,53 @@ public class PlayerController : Entity
     public void UseCoyoteTime() => coyoteTimer = 0f;
     public void UseDash() { DashInput = false; dashStartTime = Time.time; }
     public void UseAttackInput() => AttackInput = false;
-    public void SetGravityScale(float scale) => RB.gravityScale = scale;
+    public void SetGravityScale(float scale) => Movement.RB.gravityScale = scale;
     
-    // 공통 함수 2: 방향 전환 (Flip)
-    public void CheckDirectionToFace(float xInput)
-    {
-        if (xInput != 0 && xInput != FacingDirection) Flip();
-    }
-
-    public void AnimationFinishTrigger()
-    {
-        stateMachine.CurrentState.AnimationFinishTrigger();
-    }
-
-    // 애니메이션 이벤트에서 타격 프레임에 호출할 함수
-    public void TriggerAttack()
-    {
-        // 1. 타격 반경 내의 모든 적(enemyLayer) 콜라이더를 찾아 배열로 반환합니다.
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRadius, enemyLayer);
-
-        // 2. 찾은 적들에게 데미지를 입힙니다.
-        foreach (Collider2D enemyCollider in hitEnemies)
-        {
-            // 충돌한 객체가 IDamageable 인터페이스를 가지고 있는지 확인 (가장 안전하고 세련된 방식)
-            IDamageable damageable = enemyCollider.GetComponent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(Data.attackDamage);
-                Debug.Log($"적 타격 성공! 데미지: {Data.attackDamage}");
-
-                // TODO: 나중에 여기에 타격 이펙트(Particle)나 카메라 쉐이크(Camera Shake) 호출 로직을 추가하면 됩니다.
-            }
-        }
-    }
-
     public void Respawn()
     {
         // 1. 물리력 초기화 (떨어지던 중이었다면 멈춤)
-        ZeroVelocity();
+        Movement.ZeroVelocity();
 
         // 2. 체력을 다시 꽉 채움 (Entity의 Heal 함수 활용)
-        RestoreFullHealth();
+        Health.RestoreFullHealth();
 
         // 3. 죽음 상태에서 빠져나와 다시 기본 상태(Idle)로 복귀
         stateMachine.ChangeState(IdleState);
 
         Debug.Log("플레이어 부활 완료!");
     }
-
-    // ==========================================
-    // IDamageable 인터페이스 구현 (핵심 로직)
-    // ==========================================
-    public override void TakeDamage(float damage)
+    // 대시 스크립트(PlayerDashState)에서 사용할 수 있도록 무적 온오프 헬퍼 함수 추가
+    public void SetDashInvincibility(bool isInvincible)
     {
-        // 1. 무적 상태이거나 이미 죽었으면 데미지 무시 (대시 상태 무적은 나중에 여기에 추가)
-        if (stateMachine.CurrentState == DeadState || IsInvincible || CurrentHealth <= 0) return;
-
-        base.TakeDamage(damage);
-
-        // 4. 사망 체크 or 피격 상태로 강제 전환
-        if (CurrentHealth <= 0)
-        {
-            stateMachine.ChangeState(DeadState);
-        }
-        else
-        {
-            // 이 부분이 FSM의 '강제 인터럽트(Interrupt)' 입니다!
-            // 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다.
-
-            // 3. 무적 시간 부여 (다단 히트 방지)
-            iFrameTimer = Data.iFrameDuration;
-            stateMachine.ChangeState(HurtState);
-        }
+        if (Health != null) Health.IsDashInvincible = isInvincible;
     }
 
-
-    // 에디터에서 센서 범위를 시각적으로 보여주는 기능
-    protected override void OnDrawGizmos()
+    // ==========================================
+    // 8. 이벤트 리스너
+    // ==========================================
+    private void HandleTakeDamage()
     {
-        base.OnDrawGizmos();
+        if (stateMachine.CurrentState == DeadState) return;
 
-        if (attackPoint != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(attackPoint.position, attackRadius);
-        }
+        // FSM 강제 인터럽트: 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다!
+        stateMachine.ChangeState(HurtState);
     }
 
-
+    private void HandleDeath()
+    {
+        stateMachine.ChangeState(DeadState);
+    }
+    // 애니메이션 이벤트에서 타격 프레임에 호출할 함수
+    private void HandleTriggerAttack()
+    {
+        if (Combat != null)
+        {
+            Combat.PerformMeleeAttack(Data.attackDamage);
+            // 디버그 로그나 추가 이펙트는 CombatComponent 내부로 옮기거나 여기서 이벤트를 받아 처리할 수 있습니다.
+        }
+    }
+    private void HandleAnimationFinishTrigger()
+    {
+        stateMachine.CurrentState.AnimationFinishTrigger();
+    }
 }

@@ -330,6 +330,7 @@ GameObject:
   - component: {fileID: 269384253}
   - component: {fileID: 269384252}
   - component: {fileID: 269384251}
+  - component: {fileID: 269384254}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -426,6 +427,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &269384254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 269384249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00b2d199b96b516448144ab30fb26aed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineImpulseListener
+  ApplyAfter: 2
+  ChannelMask: 1
+  Gain: 1
+  Use2DDistance: 0
+  UseCameraSpace: 1
+  SignalCombinationMode: 0
+  ReactionSettings:
+    m_SecondaryNoise: {fileID: 0}
+    AmplitudeGain: 1
+    FrequencyGain: 1
+    Duration: 1
+    m_NoiseOffsets: {x: 0, y: 0, z: 0}
 --- !u!1 &288252704
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,7 +461,7 @@ GameObject:
   m_Component:
   - component: {fileID: 288252705}
   m_Layer: 7
-  m_Name: AttackCheck
+  m_Name: AttackPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -451,7 +476,7 @@ Transform:
   m_GameObject: {fileID: 288252704}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.2, y: -0.24, z: 0}
+  m_LocalPosition: {x: 1, y: -0.24, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -533,6 +558,10 @@ GameObject:
   - component: {fileID: 390774046}
   - component: {fileID: 390774045}
   - component: {fileID: 390774047}
+  - component: {fileID: 390774048}
+  - component: {fileID: 390774049}
+  - component: {fileID: 390774050}
+  - component: {fileID: 390774051}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Untagged
@@ -726,14 +755,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b300354a137f5646ac89a24f15b792f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemy
-  groundCheck: {fileID: 362733391}
-  groundCheckDistance: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  wallCheck: {fileID: 805561771}
-  wallCheckDistance: 0.5
-  <Data>k__BackingField: {fileID: 0}
+  <Data>k__BackingField: {fileID: 11400000, guid: 67f58913093a6f042859a73134a8865c, type: 2}
   lastAttackTime: 0
   playerLayer:
     serializedVersion: 2
@@ -741,9 +763,67 @@ MonoBehaviour:
   ledgeCheck: {fileID: 1443084535}
   playerCheck: {fileID: 704365543}
   ledgeCheckDistance: 0.5
-  attackDamage: 10
-  attackCheck: {fileID: 288252705}
-  attackRadius: 1
+--- !u!114 &390774048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390774040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dacb3f04de365944090f7a72d34bc670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+--- !u!114 &390774049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390774040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6368e86c500b8584bac882015e2dcad4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovementComponent
+  groundCheck: {fileID: 362733391}
+  groundCheckDistance: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  wallCheck: {fileID: 805561771}
+  wallCheckDistance: 0.5
+--- !u!114 &390774050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390774040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 512887dd4c8691f4cb9cda77fe263858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatComponent
+  attackPoint: {fileID: 288252705}
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  meleeRadius: 0.5
+  projectileFirePoint: {fileID: 0}
+--- !u!114 &390774051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390774040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d72ce81ccf90f4d46b46538e5beb397f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationEventHandler
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -928,6 +1008,10 @@ GameObject:
   - component: {fileID: 578798612}
   - component: {fileID: 578798611}
   - component: {fileID: 578798613}
+  - component: {fileID: 578798614}
+  - component: {fileID: 578798615}
+  - component: {fileID: 578798616}
+  - component: {fileID: 578798617}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -1051,22 +1135,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e07752a28675774d938afa7e38feb10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  groundCheck: {fileID: 858164589}
-  groundCheckDistance: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  wallCheck: {fileID: 350562403}
-  wallCheckDistance: 0.5
   <Data>k__BackingField: {fileID: 11400000, guid: 9a47cc242715b0a4481591bdcd75c128, type: 2}
   jumpBufferTime: 0.2
   coyoteTime: 0.1
   jumpCutMultiplier: 0.5
-  attackPoint: {fileID: 691696768}
-  attackRadius: 0.8
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 128
   comboCounter: 1
   comboWindow: 0.5
   lastAttackTime: -100
@@ -1129,6 +1201,67 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &578798614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578798606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dacb3f04de365944090f7a72d34bc670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+--- !u!114 &578798615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578798606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6368e86c500b8584bac882015e2dcad4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovementComponent
+  groundCheck: {fileID: 858164589}
+  groundCheckDistance: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  wallCheck: {fileID: 350562403}
+  wallCheckDistance: 0.5
+--- !u!114 &578798616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578798606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 512887dd4c8691f4cb9cda77fe263858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatComponent
+  attackPoint: {fileID: 691696768}
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  meleeRadius: 1
+  projectileFirePoint: {fileID: 0}
+--- !u!114 &578798617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578798606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d72ce81ccf90f4d46b46538e5beb397f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationEventHandler
 --- !u!1 &599379111
 GameObject:
   m_ObjectHideFlags: 0
@@ -1365,6 +1498,8 @@ GameObject:
   - component: {fileID: 744177801}
   - component: {fileID: 744177800}
   - component: {fileID: 744177802}
+  - component: {fileID: 744177804}
+  - component: {fileID: 744177803}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1417,6 +1552,71 @@ MonoBehaviour:
   - tag: Arrow
     prefab: {fileID: 6988679895013087120, guid: 4429d03303ee72c4384b5b6e4e3e302c, type: 3}
     size: 20
+--- !u!114 &744177803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744177799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3b6520c0d5b00e449ba95f2edc1e87a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FeedbackManager
+--- !u!114 &744177804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744177799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 180ecf9b41d478f468eb3e9083753217, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineImpulseSource
+  ImpulseDefinition:
+    ImpulseChannel: 1
+    ImpulseShape: 2
+    CustomImpulseShape:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    ImpulseDuration: 0.2
+    ImpulseType: 0
+    DissipationRate: 0.25
+    RawSignal: {fileID: 0}
+    AmplitudeGain: 1
+    FrequencyGain: 1
+    RepeatMode: 0
+    Randomize: 1
+    TimeEnvelope:
+      AttackShape:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      DecayShape:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      AttackTime: 0
+      SustainTime: 0.2
+      DecayTime: 0.7
+      ScaleWithImpact: 1
+      HoldForever: 0
+    ImpactRadius: 100
+    DirectionMode: 0
+    DissipationMode: 2
+    DissipationDistance: 100
+    PropagationSpeed: 343
+  DefaultVelocity: {x: 1, y: -1, z: 0}
 --- !u!1 &804210654
 GameObject:
   m_ObjectHideFlags: 0
@@ -2740,6 +2940,10 @@ GameObject:
   - component: {fileID: 2020872568}
   - component: {fileID: 2020872567}
   - component: {fileID: 2020872566}
+  - component: {fileID: 2020872572}
+  - component: {fileID: 2020872573}
+  - component: {fileID: 2020872574}
+  - component: {fileID: 2020872575}
   m_Layer: 7
   m_Name: RangedEnemy
   m_TagString: Untagged
@@ -2759,13 +2963,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 385775da6b1ef0d4e9f7dbd25da71439, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemy
-  groundCheck: {fileID: 1191782409}
-  groundCheckDistance: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  wallCheck: {fileID: 1488454162}
-  wallCheckDistance: 0.5
   <Data>k__BackingField: {fileID: 11400000, guid: dbfcf4456c9fb1c46bf4500a13eb8688, type: 2}
   lastAttackTime: 0
   playerLayer:
@@ -2775,7 +2972,6 @@ MonoBehaviour:
   playerCheck: {fileID: 1228632772}
   ledgeCheckDistance: 0.5
   projectilePoolTag: Arrow
-  firePoint: {fileID: 252843922}
 --- !u!95 &2020872567
 Animator:
   serializedVersion: 7
@@ -2950,6 +3146,67 @@ Transform:
   - {fileID: 252843922}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2020872572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020872565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dacb3f04de365944090f7a72d34bc670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+--- !u!114 &2020872573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020872565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6368e86c500b8584bac882015e2dcad4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MovementComponent
+  groundCheck: {fileID: 1191782409}
+  groundCheckDistance: 0.2
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  wallCheck: {fileID: 1488454162}
+  wallCheckDistance: 0.5
+--- !u!114 &2020872574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020872565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 512887dd4c8691f4cb9cda77fe263858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatComponent
+  attackPoint: {fileID: 0}
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  meleeRadius: 0
+  projectileFirePoint: {fileID: 252843922}
+--- !u!114 &2020872575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020872565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d72ce81ccf90f4d46b46538e5beb397f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimationEventHandler
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

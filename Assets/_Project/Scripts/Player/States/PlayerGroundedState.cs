@@ -40,13 +40,13 @@ public class PlayerGroundedState : PlayerState
         }
 
         // 공통 로직 1: 땅에 있을 때 점프 버튼을 누르면 즉시 점프 상태로 전환
-        if (player.HasJumpInputBuffer && player.IsGrounded())
+        if (player.HasJumpInputBuffer && player.Movement.IsGrounded())
         {
             stateMachine.ChangeState(player.JumpState);
         }
 
         // 공통 로직 2: 갑자기 발밑에 땅이 없어지면 낙하 상태로 전환
-        if (!player.IsGrounded())
+        if (!player.Movement.IsGrounded())
         {
             stateMachine.ChangeState(player.FallState);
         }
@@ -57,6 +57,6 @@ public class PlayerGroundedState : PlayerState
         base.FixedUpdate();
 
         // 땅에 있을 때는 항상 방향 전환이 가능하도록 공통 처리
-        player.CheckDirectionToFace(player.MoveInput.x);
+        player.Movement.FlipController(player.MoveInput.x);
     }
 }
