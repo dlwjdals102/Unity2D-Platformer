@@ -14,7 +14,7 @@ public class Spike : MonoBehaviour
         {
             // 인터페이스를 통해 데미지 전달! 
             // 플레이어의 무적 시간(i-frame) 덕분에 매 프레임 다다닥 맞지 않고 1초에 한 번만 맞게 됩니다.
-            target.TakeDamage(damage);
+            target.TakeDamage(damage, transform);
         }
     }
 }

@@ -29,7 +29,7 @@ public class CombatComponent : MonoBehaviour
 
             if (damageable != null)
             {
-                damageable.TakeDamage(damage);
+                damageable.TakeDamage(damage, transform);
 
                 // 타격 성공 시 역경직/카메라 쉐이크를 여기서 호출해도 좋습니다 (공격자 기준의 손맛)
             }

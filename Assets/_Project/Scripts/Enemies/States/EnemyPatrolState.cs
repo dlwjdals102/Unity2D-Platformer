@@ -20,7 +20,6 @@ public class EnemyPatrolState : EnemyState
         // [센서 확인 1] 시야에 플레이어가 들어왔는가?
         if (enemy.IsPlayerInSight())
         {
-            Debug.Log("침입자 발견! 추적 모드 가동!");
             stateMachine.ChangeState(enemy.ChaseState); 
         }
     }

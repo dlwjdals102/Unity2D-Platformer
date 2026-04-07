@@ -15,7 +15,7 @@ public class EnemyHurtState : EnemyState
         base.Enter();
 
         // 피격 시 플레이어가 바라보는 반대 방향으로 넉백!
-        enemy.Movement.SetVelocity(-enemy.Movement.FacingDirection * knockbackForceX, knockbackForceY);
+        enemy.Movement.SetVelocity(enemy.KnockbackDirection * knockbackForceX, knockbackForceY);
     }
 
     public override void Update()

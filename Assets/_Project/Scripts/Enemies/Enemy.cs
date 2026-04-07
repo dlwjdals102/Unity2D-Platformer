@@ -1,7 +1,7 @@
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
-public abstract class Enemy : Entity
+public class Enemy : Entity
 {
     // ==========================================
     // 1. 상태 머신 및 상태 인스턴스
@@ -12,9 +12,11 @@ public abstract class Enemy : Entity
     public EnemyAttackState AttackState { get; private set; }
     public EnemyHurtState HurtState { get; private set; }
     public EnemyDeadState DeadState { get; private set; }
+    public EnemyRetreatState RetreatState { get; private set; }
 
     [Header("Data")]
-    [field: SerializeField] public EnemyData Data { get; protected set; } // 데이터 컨테이너 연결
+    [field: SerializeField] public EnemyData Data { get; set; } // 데이터 컨테이너 연결
+    private PhaseComponent phaseComponent;
 
     [Header("Base AI Settings")]
     [HideInInspector] public float lastAttackTime;
@@ -50,6 +52,13 @@ public abstract class Enemy : Entity
             AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
         }
 
+        // 페이즈 컴포넌트가 있다면 구독
+        phaseComponent = GetComponent<PhaseComponent>();
+        if (phaseComponent != null)
+        {
+            phaseComponent.OnPhaseChanged += HandlePhaseChange;
+        }
+
         InitializeStateMachine();
     }
 
@@ -66,20 +75,31 @@ public abstract class Enemy : Entity
             AnimHandler.OnAttackTriggered -= HandleTriggerAttack;
             AnimHandler.OnAnimationFinished -= HandleAnimationFinishTrigger;
         }
+        if (phaseComponent != null)
+        {
+            phaseComponent.OnPhaseChanged -= HandlePhaseChange;
+        }
     }
 
     private void InitializeStateMachine()
     {
         stateMachine = new StateMachine<Enemy>();
-        PatrolState = new EnemyPatrolState(this, stateMachine, "Move");
-        ChaseState = new EnemyChaseState(this, stateMachine, "Move");
+        PatrolState = new EnemyPatrolState(this, stateMachine, "Patrol");
+        ChaseState = new EnemyChaseState(this, stateMachine, "Chase");
         AttackState = new EnemyAttackState(this, stateMachine, "Attack");
         HurtState = new EnemyHurtState(this, stateMachine, "Hurt");
         DeadState = new EnemyDeadState(this, stateMachine, "Dead");
+        RetreatState = new EnemyRetreatState(this, stateMachine, "Idle");
     }
 
     private void Start()
     {
+        // 명시적으로 1페이즈임을 애니메이터에 선언하여 안전장치를 만듭니다.
+        if (Anim != null)
+        {
+            Anim.SetInteger("Phase", 1);
+        }
+
         stateMachine.Initialize(PatrolState);
     }
 
@@ -97,6 +117,7 @@ public abstract class Enemy : Entity
     // AI 센서 (눈과 귀)
     // ==========================================
     public bool IsLedgeDetected() => Physics2D.Raycast(ledgeCheck.position, Vector2.down, 1f, Movement.GroundLayer);
+    public bool IsReverseLedgeDetected() => Physics2D.Raycast(-ledgeCheck.position, Vector2.down, 1f, Movement.GroundLayer);
 
     public bool IsPlayerInSight()
     {
@@ -138,9 +159,12 @@ public abstract class Enemy : Entity
     // ==========================================
     // 피격 및 사망 로직 (이벤트 리스너)
     // ==========================================
-    private void HandleTakeDamage()
+    private void HandleTakeDamage(Transform damageSource)
     {
         if (stateMachine.CurrentState == DeadState) return;
+
+        // 상태 전환 전에 넉백 방향을 계산해서 저장합니다!
+        DetermineKnockbackDirection(damageSource);
 
         // 역경직 및 카메라 흔들림 (정상 작동)
         if (FeedbackManager.Instance != null && !Health.IsDead)
@@ -162,6 +186,33 @@ public abstract class Enemy : Entity
         }
     }
 
+    // 페이즈 전환 수신 (데이터 스왑)
+    private void HandlePhaseChange(int phaseIndex, PhaseInfo newPhase)
+    {
+        // 1. 애니메이터의 "Phase" 파라미터를 갱신합니다. (1페이즈=1, 2페이즈=2...)
+        // 이를 통해 애니메이터 내의 Any State 트랜지션이 작동하게 됩니다.
+        if (Anim != null)
+        {
+            Anim.SetInteger("Phase", phaseIndex + 1);
+        }
+
+        // 2. SO 데이터 교체 (스탯 및 공격 카드 스왑)
+        if (newPhase.newPhaseData != null)
+        {
+            Data = newPhase.newPhaseData;
+        }
+
+        // 3. 피드백 연출 및 상태 인터럽트
+        /*if (FeedbackManager.Instance != null)
+        {
+            FeedbackManager.Instance.TriggerHitStop(0.2f);
+            FeedbackManager.Instance.TriggerCameraShake(2.0f);
+        }*/
+
+        // 하던 행동을 끊고 강제 피격 (나중에 포효상태로 구현할수있음)
+        stateMachine.ChangeState(HurtState);
+    }
+
     private void HandleDeath()
     {
         // 체력이 다 닳았다면 사망 상태로 강제 전환!
@@ -173,7 +224,13 @@ public abstract class Enemy : Entity
     // ==========================================
 
     // 공격 애니메이션의 '타격 프레임'에 호출할 함수
-    public abstract void HandleTriggerAttack();
+    public void HandleTriggerAttack()
+    {
+        if (Combat == null || Data == null || Data.basicAttackAction == null) return;
+
+        // 적이 들고 있는 '공격 카드(AttackActionSO)'의 능력을 발동시킵니다.
+        Data.basicAttackAction.Execute(this, Combat, Data.attackDamage);
+    }
 
     // 공격 애니메이션의 '마지막 프레임'에 호출할 함수
     public void HandleAnimationFinishTrigger()

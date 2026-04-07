@@ -9,15 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2717bdc15e3a2454aaf9fd5f7502cc4f, type: 3}
-  m_Name: DefaultPlayerData
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerData
+  m_Script: {fileID: 11500000, guid: cb6dc84daec5c4d44909c940c3be2db9, type: 3}
+  m_Name: BossEnemyData_Phase02
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 100
   moveSpeed: 5
   basicAttackAction: {fileID: 11400000, guid: 21ae3a5b8dc454a4b98aa657427a7068, type: 2}
-  jumpForce: 12
-  dashSpeed: 20
-  dashDuration: 0.2
-  dashCooldown: 1
-  attackDamage: 15
-  iFrameDuration: 0.5
+  patrolSpeed: 2
+  chaseSpeed: 4
+  detectionDistance: 8
+  attackDistance: 1.5
+  aggroDuration: 2
+  attackDamage: 10
+  attackCooldown: 2

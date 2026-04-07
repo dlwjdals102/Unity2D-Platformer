@@ -13,6 +13,8 @@ public abstract class Entity : MonoBehaviour
     public MovementComponent Movement { get; private set; }
     public CombatComponent Combat { get; private set; }
 
+    // 넉백 방향을 기억할 변수 (1 = 오른쪽으로 튕김, -1 = 왼쪽으로 튕김)
+    public int KnockbackDirection { get; private set; } = 1;
 
     // 자식 클래스들의 Awake에서 base.Awake()로 호출하여 컴포넌트를 초기화합니다.
     protected virtual void Awake()
@@ -27,5 +29,20 @@ public abstract class Entity : MonoBehaviour
     protected virtual void OnDestroy()
     {
         // 메모리 누수 방지 (자식들이 override해서 구독 해제용으로 씁니다)
+    }
+
+    // 공격자의 위치를 바탕으로 넉백 방향을 계산합니다.
+    public void DetermineKnockbackDirection(Transform damageSource)
+    {
+        if (damageSource != null)
+        {
+            // 공격자가 내 오른쪽에 있으면 나는 왼쪽(-1)으로 튕겨야 함!
+            KnockbackDirection = transform.position.x < damageSource.position.x ? -1 : 1;
+        }
+        else
+        {
+            // 만약 독 데미지처럼 출처가 명확하지 않다면, 그냥 내가 바라보는 반대 방향으로 튕김
+            KnockbackDirection = -Movement.FacingDirection;
+        }
     }
 }

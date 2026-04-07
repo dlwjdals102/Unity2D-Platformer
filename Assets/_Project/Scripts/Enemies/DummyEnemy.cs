@@ -20,7 +20,7 @@ public class DummyEnemy : MonoBehaviour, IDamageable
     }
 
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Transform source)
     {
         currentHealth -= damage;
         Debug.Log($"[더미] 윽! {damage} 데미지를 받았다! (남은 체력: {currentHealth}/{maxHealth})");

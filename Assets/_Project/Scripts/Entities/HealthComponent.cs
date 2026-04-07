@@ -5,7 +5,7 @@ using UnityEngine;
 public class HealthComponent : MonoBehaviour, IDamageable
 {
     public event Action<float, float> OnHealthChanged; // 체력이 변경될 때마다 발송할 이벤트 (현재 체력, 최대 체력)
-    public event Action OnTakeDamage; // 피격 이펙트/역경직용
+    public event Action<Transform> OnTakeDamage; // 피격 이펙트/역경직용
     public event Action OnDeath;
 
     [Header("Health Stats")]
@@ -36,7 +36,7 @@ public class HealthComponent : MonoBehaviour, IDamageable
         NotifyHealthChanged();
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Transform damageSource)
     {
         // 피격 후 무적이거나, 대시 중이거나, 죽었다면 데미지 무시
         if (isInvincible || IsDashInvincible || IsDead) return;
@@ -48,7 +48,7 @@ public class HealthComponent : MonoBehaviour, IDamageable
         NotifyHealthChanged(); 
 
         // 피격 이벤트를 발생시켜 Enemy나 Player가 연출을 실행하도록 함
-        OnTakeDamage?.Invoke();
+        OnTakeDamage?.Invoke(damageSource);
 
         if (CurrentHealth <= 0)
         {

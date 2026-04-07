@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 100
   moveSpeed: 5
+  basicAttackAction: {fileID: 11400000, guid: 21ae3a5b8dc454a4b98aa657427a7068, type: 2}
   patrolSpeed: 2
   chaseSpeed: 4
   detectionDistance: 8

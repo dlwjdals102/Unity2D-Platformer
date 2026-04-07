@@ -44,13 +44,14 @@ public class Projectile : MonoBehaviour
     // 투사체가 무언가에 부딪혔을 때의 처리
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // 1. 플레이어에게 맞았을 때
-        PlayerController player = collision.GetComponent<PlayerController>();
-        if (player != null)
+        // 이제 이 투사체는 플레이어, 파괴 가능한 사물, (만약 플레이어가 쏜다면) 몬스터까지 모두 타격 가능합니다.
+        IDamageable target = collision.GetComponent<IDamageable>();
+        if (target != null)
         {
-            player.Health.TakeDamage(actualDamage);
-            Deactivate(); // Destroy 대신 비활성화!
-            return; // 아래 코드를 실행하지 않고 바로 종료
+            // 넉백 방향 계산을 위해 transform(투사체의 위치)을 함께 넘겨줍니다.
+            target.TakeDamage(actualDamage, transform);
+            Deactivate();
+            return;
         }
 
         // 2. 벽이나 바닥(Ground)에 부딪혔을 때

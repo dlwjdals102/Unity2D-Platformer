@@ -205,9 +205,12 @@ public class PlayerController : Entity
     // ==========================================
     // 8. 이벤트 리스너
     // ==========================================
-    private void HandleTakeDamage()
+    private void HandleTakeDamage(Transform damageSource)
     {
         if (stateMachine.CurrentState == DeadState) return;
+
+        // 상태 전환 전에 넉백 방향을 계산해서 저장합니다!
+        DetermineKnockbackDirection(damageSource);
 
         // FSM 강제 인터럽트: 공격 중이든 점프 중이든 모든 것을 끊고 피격 상태로 들어갑니다!
         stateMachine.ChangeState(HurtState);

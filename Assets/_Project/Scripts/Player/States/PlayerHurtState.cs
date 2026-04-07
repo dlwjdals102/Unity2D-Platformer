@@ -13,13 +13,11 @@ public class PlayerHurtState : PlayerState
     {
         base.Enter();
 
-        // 진입하자마자 X, Y축 속도를 강제로 덮어씌워서 넉백 적용!
-        // (지금은 자신이 바라보는 방향의 반대쪽으로 밀려나게 세팅합니다)
-        float knockbackDir = -player.Movement.FacingDirection;
-        player.Movement.SetVelocity(knockbackDir * knockbackForceX, knockbackForceY);
+        // 정확한 타격 반대 방향으로 튕겨나감!
+        player.Movement.SetVelocity(player.KnockbackDirection * knockbackForceX, knockbackForceY);
     }
 
-    public override void Update()
+    public override void Update()   
     {
         base.Update();
 
