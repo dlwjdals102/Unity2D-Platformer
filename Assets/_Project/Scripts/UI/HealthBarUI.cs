@@ -10,6 +10,10 @@ public class HealthBarUI : MonoBehaviour
     // 내부적으로 체력 컴포넌트만 따로 캐싱해서 사용합니다!
     private HealthComponent targetHealth;
 
+    [Header("Auto Targeting")]
+    [Tooltip("체크하면 씬이 시작될 때 맵에 있는 플레이어를 자동으로 찾아 체력바로 씁니다. (적 몬스터 UI면 체크 해제)")]
+    public bool isPlayerUI = false;
+
     [Header("UI Components")]
     // 이 컨테이너의 크기를 늘리면 하위 이미지 3개(Background, Red, Green)가 모두 같이 늘어납니다.
     public RectTransform healthBarContainer;
@@ -25,6 +29,11 @@ public class HealthBarUI : MonoBehaviour
 
     private void Awake()
     {
+        // 개선된 오토매틱 타겟팅: '플레이어 전용 UI'일 때만 자동으로 씬의 플레이어를 찾습니다.
+        if (targetEntity == null && isPlayerUI)
+        {
+            targetEntity = FindFirstObjectByType<PlayerController>();
+        }
         // 1. 할당된 Entity가 있다면, 그 안에서 HealthComponent만 빼옵니다.
         if (targetEntity != null)
         {
