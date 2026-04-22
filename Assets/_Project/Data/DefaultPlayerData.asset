@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerData
   maxHealth: 100
   moveSpeed: 5
-  basicAttackAction: {fileID: 11400000, guid: 21ae3a5b8dc454a4b98aa657427a7068, type: 2}
-  jumpForce: 12
+  jumpForce: 14
   dashSpeed: 20
   dashDuration: 0.2
   dashCooldown: 1

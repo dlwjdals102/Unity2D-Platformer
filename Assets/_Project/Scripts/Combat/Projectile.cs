@@ -11,6 +11,10 @@ public class Projectile : MonoBehaviour
     private float actualDamage; // 발사자가 넘겨준 데미지를 기억할 변수
     private LayerMask targetLayer; // 내가 때려야 할 적의 레이어
 
+    // 피드백(타격감) 수치를 기억할 변수 추가
+    private float shakeIntensity;
+    private float hitStopDuration;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -30,10 +34,14 @@ public class Projectile : MonoBehaviour
     }
 
     // 몬스터가 이 투사체를 소환(Instantiate)한 직후에 호출할 함수입니다.
-    public void Setup(Vector2 moveDirection, float damageAmount, LayerMask targetMask)
+    public void Setup(Vector2 moveDirection, float damageAmount, LayerMask targetMask, float shake = 0f, float hitStop = 0f)
     {
         actualDamage = damageAmount;
         targetLayer = targetMask;
+
+        // 피드백 수치 저장
+        shakeIntensity = shake;
+        hitStopDuration = hitStop;
 
         // 방향을 정규화(길이를 1로 만듦)한 뒤 속도를 곱해 날려 보냅니다.
         rb.linearVelocity = moveDirection.normalized * speed;
@@ -55,6 +63,24 @@ public class Projectile : MonoBehaviour
             {
                 // 넉백 방향 계산을 위해 transform(투사체의 위치)을 함께 넘겨줍니다.
                 target.TakeDamage(actualDamage, transform);
+
+                // 투사체 적중 시 피드백 폭발!
+                if (FeedbackManager.Instance != null)
+                {
+                    // 정확한 물리적 타격점 계산 (투사체와 적 콜라이더의 접점)
+                    Vector2 exactHitPoint = collision.ClosestPoint(transform.position);
+
+                    // 투사체의 진행 방향(x축 속도)을 기반으로 스파크 방향 결정
+                    float facingDirection = Mathf.Sign(rb.linearVelocity.x);
+
+                    // 스파크 이펙트 소환!
+                    //FeedbackManager.Instance.SpawnVFX("HitSpark", exactHitPoint, facingDirection);
+
+                    // 화면 흔들림 및 타격 정지
+                    if (hitStopDuration > 0f) FeedbackManager.Instance.TriggerHitStop(hitStopDuration);
+                    if (shakeIntensity > 0f) FeedbackManager.Instance.TriggerCameraShake(shakeIntensity);
+                }
+
                 Deactivate();
                 return;
             }

@@ -48,6 +48,9 @@ MonoBehaviour:
   - tag: Arrow
     prefab: {fileID: 6988679895013087120, guid: 4429d03303ee72c4384b5b6e4e3e302c, type: 3}
     size: 10
+  - tag: Shockwave
+    prefab: {fileID: 6988679895013087120, guid: 8fea02192de1a414393dd50d72bce901, type: 3}
+    size: 6
 --- !u!1 &8498007011576125948
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,7 +95,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0540bee2b8eb924cab56d4b02b7ef67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  player: {fileID: 3338634556545469064, guid: 7645b280c4ab3b849af4fc9363625e58, type: 3}
+  player: {fileID: 0}
   respawnDelay: 2
 --- !u!1 &8636247895425790330
 GameObject:
