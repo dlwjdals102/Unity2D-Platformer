@@ -103,12 +103,7 @@ public class PlayerController : Entity
         if (Data != null)
         {
             Health.Initialize(Data.maxHealth, Data.iFrameDuration);
-        }
-
-        // 마나 시스템 초기화 (최대치와 회복 속도 주입)
-        if (Mana != null)
-        {
-            Mana.Initialize(Data.maxMana, Data.manaRegenRate);
+            Mana?.Initialize(Data.maxMana, Data.manaRegenRate);
         }
 
         // 시작 시 Idle 상태로 초기화
@@ -281,5 +276,43 @@ public class PlayerController : Entity
     private void HandleAnimationFinishTrigger()
     {
         StateMachine.CurrentState.AnimationFinishTrigger();
+    }
+
+
+    /// <summary>
+    /// 씬 이동 시 매니저가 호출합니다. 플레이어가 자신의 현재 스탯을 상자에 담아 반환합니다.
+    /// </summary>
+    public DataManager.GameData ExportSessionData()
+    {
+        DataManager.GameData data = new DataManager.GameData();
+
+        // 플레이어만이 자신의 속주머니(Health, Mana)를 열어 수치를 기입합니다.
+        if (Health != null)
+        {
+            data.currentHealth = Health.CurrentHealth;
+            data.maxHealth = Data.maxHealth; // (영구 체력 증가 기믹이 있다면 Health.MaxHealth 등을 사용)
+        }
+
+        if (Mana != null)
+        {
+            data.currentMana = Mana.CurrentMana;
+            data.maxMana = Data.maxMana;
+        }
+
+        return data;
+    }
+
+    /// <summary>
+    /// 새 씬 로드 시 GameManager가 호출합니다. 매니저가 던져준 상자를 뜯어 내 몸에 적용합니다.
+    /// </summary>
+    public void ImportSessionData(DataManager.GameData data)
+    {
+        Debug.Log($"[Import] 상자에서 꺼낸 값 - HP: {data.currentHealth}, MP: {data.currentMana}");
+
+        if (Health != null)
+            Health.LoadSavedHealth(data.currentHealth);
+
+        if (Mana != null)
+            Mana.LoadSavedMana(data.currentMana);
     }
 }

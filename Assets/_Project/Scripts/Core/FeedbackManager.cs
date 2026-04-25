@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CinemachineImpulseSource))]
 public class FeedbackManager : MonoBehaviour
@@ -28,6 +29,38 @@ public class FeedbackManager : MonoBehaviour
         // 컴포넌트 자동 할당
         impulseSource = GetComponent<CinemachineImpulseSource>();
     }
+
+    // ==========================================
+    // 씬 로드 이벤트 구독 (새로운 카메라 자동 추적)
+    // ==========================================
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "Title") return; // 타이틀 씬은 무시합니다.
+
+        // 새로운 씬에 배치된 시네머신 카메라를 찾아냅니다.
+        bossVirtualCamera = FindFirstObjectByType<CinemachineCamera>();
+
+        if (bossVirtualCamera != null)
+        {
+            defaultOrthoSize = bossVirtualCamera.Lens.OrthographicSize;
+            Debug.Log($"[{scene.name}] 피드백 매니저가 새 시네머신 카메라를 찾았습니다.");
+        }
+        else
+        {
+            Debug.LogWarning($"[{scene.name}] 시네머신 카메라가 없습니다!");
+        }
+    }
+
 
     private void Start()
     {

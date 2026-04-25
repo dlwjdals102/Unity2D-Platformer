@@ -17,12 +17,11 @@ public class InputManager : MonoBehaviour
             Controls = new PlayerInputActions();
 
             // @Core 전체를 파괴 방지 (이전 설계 유지)
-            DontDestroyOnLoad(transform.root.gameObject);
+            //DontDestroyOnLoad(transform.root.gameObject);
         }
         else
         {
             Destroy(gameObject);
-            return;
         }
     }
 

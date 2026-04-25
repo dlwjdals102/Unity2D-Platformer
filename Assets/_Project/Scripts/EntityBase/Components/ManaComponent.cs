@@ -54,6 +54,13 @@ public class ManaComponent : MonoBehaviour
         NotifyManaChanged();
     }
 
+    public void LoadSavedMana(float savedMana)
+    {
+        // 전역 창고에서 가져온 마나 수치를 적용합니다.
+        CurrentMana = savedMana;
+        NotifyManaChanged(); // UI 업데이트 방송
+    }
+
     // UI 동기화를 위한 이벤트 호출 헬퍼
     private void NotifyManaChanged()
     {

@@ -9,27 +9,29 @@ public class BossDeadState : BossState
     {
         base.Enter(); // "dead" 애니메이션 Bool을 켭니다.
 
-        // 1. 움직임 완전 고정 및 충돌체 제거 (플레이어가 시체에 막히지 않도록)
-        boss.Movement.SetVelocity(0f, boss.Movement.RB.linearVelocity.y);
-        boss.Movement.RB.bodyType = RigidbodyType2D.Kinematic;
+        // 1. 물리적 상태 고정 (시체화)
+        boss.Movement.SetVelocity(0f, 0f);
+        boss.Movement.RB.bodyType = RigidbodyType2D.Static; // 완전히 고정
 
         Collider2D coll = boss.GetComponent<Collider2D>();
         if (coll != null) coll.enabled = false;
 
-        Debug.Log("[Boss] 보스 처치! 사망 연출 시작.");
-
-        // TODO: 타격감 극대화를 위한 화면 슬로우(Time.timeScale = 0.5f), 
-        // 카메라 흔들림(Camera Shake), 연속 폭발 파티클 등을 여기에 추가하세요!
-    }
-
-    public override void Update()
-    {
-        base.Update();
-
-        // 사망 애니메이션이 완전히 끝나면 오브젝트를 끕니다. (혹은 시체로 남겨둡니다)
-        if (isAnimationFinished)
+        // 2. 처치 기록에 따른 조건부 연출
+        if (!DataManager.Instance.sessionData.isBossDefeated)
         {
-            boss.gameObject.SetActive(false); // Destroy 대신 SetActive(false) 추천
+            // [최초 처치 시에만 실행되는 로직]
+            DataManager.Instance.sessionData.isBossDefeated = true; // 기록 갱신
+
+            Debug.Log("[Boss] 최초 처치! 화려한 사망 연출을 실행합니다.");
+
+            // 여기에 카메라 쉐이크나 슬로우 모션 코드를 넣으세요.
+            // 예: FeedbackManager.Instance.TriggerCameraShake(5f, 0.5f);
+        }
+        else
+        {
+            // [씬 재진입 시 실행되는 로직]
+            Debug.Log("[Boss] 이미 처치된 보스입니다. 연출 없이 시체 상태를 유지합니다.");
         }
     }
+
 }

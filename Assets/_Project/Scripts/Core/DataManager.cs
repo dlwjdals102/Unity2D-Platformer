@@ -4,31 +4,57 @@ public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
 
+    public GameData sessionData;
+    public bool hasSavedData = false;
+
     [System.Serializable]
     public class GameData
     {
         public float currentHealth;
         public float maxHealth;
-        //public int gold;
+        public float currentMana; // 세션 마나 데이터
+        public float maxMana; // 세션 최대 마나 데이터
+
+        public string lastSceneName; // 마지막으로 머물렀던 씬 이름
         public string lastPortalID; // 어떤 포탈로 나왔는지 기억
+
         // 여기에 언제든 public 변수를 추가하면 즉시 동기화 대상으로 포함됩니다.
+        // 추가: 보스 처치 여부를 저장하는 플래그
+        public bool isBossDefeated;
     }
 
-    public GameData sessionData = new GameData();
+    [Header("Default Data Assets")]
+    [SerializeField] private PlayerData defaultPlayerData; // 에디터에서 PlayerData SO를 연결합니다.
 
-    public bool hasSavedData = false;
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(transform.root.gameObject);
+            //DontDestroyOnLoad(transform.root.gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    public void ClearData()
+    {
+        sessionData = new GameData();
+
+        if (defaultPlayerData != null)
+        {
+            // SO 설계도에서 초기 스탯을 복사해옵니다.
+            sessionData.maxHealth = defaultPlayerData.maxHealth;
+            sessionData.currentHealth = defaultPlayerData.maxHealth;
+            sessionData.maxMana = defaultPlayerData.maxMana;
+            sessionData.currentMana = defaultPlayerData.maxMana;
+        }
+
+        hasSavedData = false;
+        Debug.Log("[DataManager] 새 게임을 위해 세션 데이터가 SO 기반으로 초기화되었습니다.");
     }
 
     /// <summary>

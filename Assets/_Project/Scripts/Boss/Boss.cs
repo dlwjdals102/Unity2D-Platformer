@@ -51,6 +51,14 @@ public class Boss : Entity
             Health.Initialize(Data.maxHealth);
         }
 
+        // 추가: 씬에 진입했을 때 이미 보스가 처치된 상태인지 확인
+        if (DataManager.Instance != null && DataManager.Instance.sessionData.isBossDefeated)
+        {
+            // AI를 깨우지 않고 즉시 사망 상태로 진입 (애니메이션은 'Dead' 상태로 고정)
+            stateMachine.ChangeState(DeadState);
+            return;
+        }
+
         // 보스는 태어나자마자 무조건 대기(Sleep) 상태로 시작합니다!
         stateMachine.Initialize(SleepState);
     }
@@ -68,7 +76,7 @@ public class Boss : Entity
     }
 
     // ==========================================
-    // 가중치 기반 랜덤 공격 패턴 뽑기 (가챠 시스템)
+    // 가중치 기반 랜덤 공격 패턴 뽑기
     // ==========================================
     public void ChooseNextAttack()
     {

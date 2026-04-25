@@ -40,13 +40,16 @@ public class AudioManager : MonoBehaviour
     private AudioSource bgmSourceB;
     private bool isPlayingA = true; // 현재 A가 재생 중인지 추적
 
+    [Header("Main Settings")]
+    public AudioMixer mainMixer;
+
     private void Awake()
     {
         // 싱글톤 세팅
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(transform.root.gameObject);
+            //DontDestroyOnLoad(transform.root.gameObject);
         }
         else
         {
@@ -75,6 +78,36 @@ public class AudioManager : MonoBehaviour
 
         bgmSourceA.outputAudioMixerGroup = bgmMixerGroup;
         bgmSourceB.outputAudioMixerGroup = bgmMixerGroup;
+    }
+
+    private void Start()
+    {
+        // 씬 시작 시 저장된 볼륨 불러오기
+        LoadVolumeSettings();
+    }
+
+    // 슬라이더(0.0001 ~ 1) 값을 받아 믹서에 적용 (dB 변환 공식 사용)
+    public void SetBGMVolume(float volume)
+    {
+        if (mainMixer == null) return;
+        mainMixer.SetFloat("BGM_Volume", Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat("Saved_BGM_Volume", volume);
+    }
+
+    public void SetSFXVolume(float volume)
+    {
+        if (mainMixer == null) return;
+        mainMixer.SetFloat("SFX_Volume", Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat("Saved_SFX_Volume", volume);
+    }
+
+    private void LoadVolumeSettings()
+    {
+        float bgm = PlayerPrefs.GetFloat("Saved_BGM_Volume", 1f);
+        float sfx = PlayerPrefs.GetFloat("Saved_SFX_Volume", 1f);
+
+        SetBGMVolume(bgm);
+        SetSFXVolume(sfx);
     }
 
     /// <summary>

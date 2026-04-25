@@ -24,6 +24,21 @@ public class BossRoomManager : MonoBehaviour
 
     public bool isGizmoDraw = true;
 
+    private void Start()
+    {
+        if (bossHealthBar != null) bossHealthBar.gameObject.SetActive(false);
+
+        // 이미 보스가 처치된 방이라면?
+        if (DataManager.Instance != null && DataManager.Instance.sessionData.isBossDefeated)
+        {
+            isRoomCleared = true;
+            isDoorClosed = true; // 문이 열린 상태로 유지되게 하거나, 로직에 따라 처리
+
+            if (entranceDoor != null) entranceDoor.SetActive(false); // 문 열어두기
+            Debug.Log("[BossRoomManager] 이미 처치된 보스입니다. 방을 개방합니다.");
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // 1단계: 플레이어가 방에 입장하면 문을 걸어 잠급니다.

@@ -40,33 +40,6 @@ public class Enemy : Entity
     {
         base.Awake(); // 부모(Entity)의 Awake 호출: RB, Anim, 체력 자동 초기화
 
-        // SO 데이터 주입 및 초기화 (무적 시간 없음)
-        if (Data != null)
-        {
-            Health.Initialize(Data.maxHealth);
-        }
-
-        // 피격 및 사망 이벤트 구독
-        if (Health != null)
-        {
-            Health.OnTakeDamage += HandleTakeDamage;
-            Health.OnDeath += HandleDeath;
-        }
-
-        // 애니메이션 이벤트 구독!
-        if (AnimHandler != null)
-        {
-            AnimHandler.OnAttackTriggered += HandleTriggerAttack; // 자식 클래스(Melee, Ranged)에서 구현한 그 공격!
-            AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
-        }
-
-        // 게임이 시작될 때 플레이어를 찾아서 기억해둡니다.
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-        {
-            PlayerTransform = playerObj.transform;
-        }
-
         InitializeStateMachine();
     }
 
@@ -110,8 +83,43 @@ public class Enemy : Entity
 
     private void Start()
     {
+        // SO 데이터 주입 및 초기화 (무적 시간 없음)
+        if (Data != null)
+        {
+            Health.Initialize(Data.maxHealth);
+        }
+
+        // 피격 및 사망 이벤트 구독
+        if (Health != null)
+        {
+            Health.OnTakeDamage += HandleTakeDamage;
+            Health.OnDeath += HandleDeath;
+        }
+
+        // 애니메이션 이벤트 구독!
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered += HandleTriggerAttack; // 자식 클래스(Melee, Ranged)에서 구현한 그 공격!
+            AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
+        }
+
+        // 게임이 시작될 때 플레이어를 찾아서 기억해둡니다.
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            PlayerTransform = playerObj.transform;
+        }
+
+        GameManager.Instance.player.Health.OnDeath += HandlePlayerDeath;
+
         stateMachine.Initialize(PatrolState);
     }
+    private void HandlePlayerDeath()
+    {
+        // 공격 중이든, 추격 중이든 묻지도 따지지도 않고 순찰/수면 모드로 강제 전환!
+        stateMachine.ChangeState(PatrolState); // 보스는 SleepState
+    }
+
     protected override void Update()
     {
         base.Update();

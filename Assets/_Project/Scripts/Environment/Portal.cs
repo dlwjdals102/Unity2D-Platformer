@@ -33,6 +33,8 @@ public class Portal : MonoBehaviour
 
     private void Update()
     {
+        if (string.IsNullOrEmpty(targetSceneName)) return;
+
         // 플레이어가 포탈 범위 안에 있고, 상호작용 키(예: 위쪽 방향키)를 눌렀을 때
         if (isPlayerInRange && InputManager.Instance.Controls.Player.Interact.WasPressedThisFrame())
         {
@@ -49,5 +51,22 @@ public class Portal : MonoBehaviour
                 Debug.LogError("SceneTransitionManager가 없습니다!");
             }
         }
+    }
+
+    public static Portal FindPortalByID(string id)
+    {
+        // 현재 씬에 로드된 모든 Portal 오브젝트를 가져옵니다.
+        Portal[] allPortals = Object.FindObjectsByType<Portal>(FindObjectsSortMode.None);
+
+        foreach (Portal portal in allPortals)
+        {
+            if (portal.portalID == id)
+            {
+                return portal;
+            }
+        }
+
+        Debug.LogWarning($"[Portal] ID가 '{id}'인 포탈을 찾을 수 없습니다.");
+        return null;
     }
 }

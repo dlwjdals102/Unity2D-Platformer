@@ -14,13 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   maxHealth: 100
   moveSpeed: 5
-  attackType: 1
   patrolSpeed: 2
   chaseSpeed: 4
   detectionDistance: 8
   attackDistance: 5
   aggroDuration: 2
-  attackDamage: 10
+  attackDamage: 100
   attackCooldown: 2
   specialAttackCooldown: 8
   patrolDuration: 3
