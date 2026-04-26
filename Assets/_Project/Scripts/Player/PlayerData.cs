@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerData : EntityData
 {
     [Header("Player Movement")]
+    public float moveSpeed = 5f;
     public float jumpForce = 12f;
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;

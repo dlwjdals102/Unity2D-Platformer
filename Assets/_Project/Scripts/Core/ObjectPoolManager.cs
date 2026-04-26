@@ -19,12 +19,16 @@ public class ObjectPoolManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance == null)
+        {
+            Instance = this;
+            //DontDestroyOnLoad(transform.root.gameObject);
+        }
+        else
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
 
         // √¢∞Ì(µÒº≈≥ ∏Æ) √ ±‚»≠
         poolDictionary = new Dictionary<string, Queue<GameObject>>();

@@ -19,12 +19,16 @@ public class FeedbackManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance == null)
+        {
+            Instance = this;
+            //DontDestroyOnLoad(transform.root.gameObject);
+        }
+        else
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
 
         // 컴포넌트 자동 할당
         impulseSource = GetComponent<CinemachineImpulseSource>();
@@ -45,7 +49,7 @@ public class FeedbackManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "Title") return; // 타이틀 씬은 무시합니다.
+        if (scene.name == Define.SceneNames.Title) return; // 타이틀 씬은 무시합니다.
 
         // 새로운 씬에 배치된 시네머신 카메라를 찾아냅니다.
         bossVirtualCamera = FindFirstObjectByType<CinemachineCamera>();

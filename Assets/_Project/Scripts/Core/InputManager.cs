@@ -9,20 +9,16 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-
-            // 입력 객체 생성
-            Controls = new PlayerInputActions();
-
-            // @Core 전체를 파괴 방지 (이전 설계 유지)
-            //DontDestroyOnLoad(transform.root.gameObject);
-        }
-        else
+        // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+        Instance = this;
+
+        // 입력 객체 생성
+        Controls = new PlayerInputActions();
     }
 
     // 시스템이 켜고 꺼질 때 입력도 같이 켜고 꺼줍니다.

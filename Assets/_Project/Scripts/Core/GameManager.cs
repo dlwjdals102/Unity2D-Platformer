@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,6 +8,17 @@ public class GameManager : MonoBehaviour
     // 싱글톤(Singleton) 구현: 누구나 GameManager.Instance로 접근 가능합니다.
     public static GameManager Instance { get; private set; }
 
+    // ==========================================
+    // 외부에 공개되는 플레이어 생명주기 이벤트
+    // (Enemy, UI, Camera 등이 GameManager의 내부 구조를 알 필요 없이 이 이벤트만 구독합니다)
+    // ==========================================
+    /// <summary>새 씬 로드 후 플레이어가 준비되었음을 알립니다. (UI 연결, 적 타겟 설정 등)</summary>
+    public event Action<PlayerController> OnPlayerReady;
+    /// <summary>플레이어가 사망했음을 알립니다. (적의 패트롤 복귀, BGM 변경 등)</summary>
+    public event Action OnPlayerDeath;
+    /// <summary>플레이어가 부활을 완료했음을 알립니다.</summary>
+    public event Action OnPlayerRespawn;
+
     [Header("Player Setup")]
     public PlayerController player;
 
@@ -14,19 +26,16 @@ public class GameManager : MonoBehaviour
     private Vector2 currentRespawnPoint;
 
     private bool isRespawning = false;
-    private bool waitingForUserChoice = false; //  유저 선택 대기 상태
+    private bool waitingForUserChoice = false; // 유저 선택 대기 상태
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(transform.root.gameObject);
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+        Instance = this;
     }
 
     // ==========================================
@@ -34,108 +43,121 @@ public class GameManager : MonoBehaviour
     // ==========================================
     private void OnEnable()
     {
-        // 매니저가 활성화될 때, 씬이 로드될 때마다 'OnSceneLoaded' 함수를 실행하라고 예약합니다.
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDisable()
     {
-        // 매니저가 꺼질 때 예약을 취소합니다 (메모리 누수 방지)
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // 1. 타이틀 씬이라면 플레이어를 찾지 않고 무시합니다.
-        // (디렉터님의 타이틀 씬 이름이 정확히 "Title"이라고 가정합니다. 다르다면 맞춰서 수정해주세요)
-        if (scene.name == "Title")
+        if (scene.name == Define.SceneNames.Title)
         {
+            UnsubscribeFromPlayer(); // 이전 씬의 구독 해제
             player = null;
-            Debug.Log("[GameManager] 타이틀 씬입니다. 플레이어를 찾지 않습니다.");
             return;
         }
 
         // 2. 인게임 씬이라면 새로운 씬에 배치된 플레이어를 찾습니다.
+        UnsubscribeFromPlayer(); // 혹시 모를 이전 구독 해제
         player = FindFirstObjectByType<PlayerController>();
 
         if (player != null)
         {
-            // 플레이어를 찾았다면, 저장된 데이터를 적용하고 위치를 이동시킵니다!
-            // 그냥 호출하면 순서 문제가 생길 수 있으니 코루틴으로 안전하게 실행합니다.
-            StartCoroutine(RestoreSessionRoutine());
+            // 3. 플레이어 사망 이벤트 구독 (중계용)
+            SubscribeToPlayer();
+
+            // 4. 코루틴으로 안전하게 세션 복구 + Ready 이벤트 발행
+            StartCoroutine(InitializePlayerRoutine());
         }
     }
 
-    private IEnumerator Start()
-    {
-        // 1. 플레이어가 자신의 Start()에서 SO를 읽어 자가 초기화를 할 때까지 1프레임 대기합니다.
-        yield return null;
-
-        // 게임 시작 시, 플레이어의 처음 위치를 기본 부활 지점으로 설정합니다.
-        if (player != null)
-        {
-            currentRespawnPoint = player.transform.position;
-
-            // 플레이어 사망 이벤트 구독
-            // 플레이어의 HealthComponent가 OnDeath를 알리면 RespawnPlayer를 즉시 실행합니다.
-            if (player.Health != null)
-            {
-                player.Health.OnDeath += RespawnPlayer;
-            }
-        }
-
-        //StartCoroutine(RestoreSessionRoutine());
-    }
-
-    // 메모리 안전을 위한 이벤트 해제
-    private void OnDestroy()
-    {
-        if (player != null && player.Health != null)
-        {
-            player.Health.OnDeath -= RespawnPlayer;
-        }
-    }
-
-    public IEnumerator RestoreSessionRoutine()
+    private IEnumerator InitializePlayerRoutine()
     {
         // 플레이어와 포탈들이 각자의 Awake/Start를 마칠 때까지 1프레임 기다려줍니다.
         yield return null;
 
+        // 1. 저장된 데이터가 있다면 위치/스탯 복구
         if (DataManager.Instance != null && DataManager.Instance.hasSavedData)
         {
-            Debug.Log("[GameManager] 세션 복구를 시작합니다.");
-
-            // 1. 저장된 스탯(체력, 마나) 주입
+            // 저장된 스탯(체력, 마나) 주입
             player.ImportSessionData(DataManager.Instance.sessionData);
 
-            // 2. 저장된 포탈 ID로 위치 이동
-            string targetID = DataManager.Instance.sessionData.lastPortalID;
-            Portal exitPortal = Portal.FindPortalByID(targetID);
+            // 위치 복원 우선순위: 체크포인트 > 포탈
+            // (체크포인트 저장 시 lastPortalID는 빈 문자열로 초기화되므로 자연스럽게 분기됨)
+            string checkpointID = DataManager.Instance.sessionData.lastCheckpointID;
+            string portalID = DataManager.Instance.sessionData.lastPortalID;
 
-            if (exitPortal != null)
+            if (!string.IsNullOrEmpty(checkpointID))
             {
-                // 플레이어 위치를 포탈의 스폰 지점으로 순간이동
-                player.transform.position = exitPortal.spawnPoint.position;
-                currentRespawnPoint = player.transform.position; // 체크포인트 갱신
-                Debug.Log($"[GameManager] 포탈 '{targetID}'로 텔레포트 완료.");
+                // 체크포인트로 부활
+                Checkpoint cp = Checkpoint.FindCheckpointByID(checkpointID);
+                if (cp != null)
+                {
+                    player.transform.position = cp.SpawnPosition;
+                }
+            }
+            else if (!string.IsNullOrEmpty(portalID))
+            {
+                // 포탈로 도착 (씬 전환)
+                Portal exitPortal = Portal.FindPortalByID(portalID);
+                if (exitPortal != null)
+                {
+                    player.transform.position = exitPortal.spawnPoint.position;
+                }
             }
         }
+
+        // 2. 부활 지점을 현재 위치로 갱신
+        currentRespawnPoint = player.transform.position;
+
+        // 3. 모든 준비가 끝났음을 외부에 알림 (UI, 카메라, 적이 이 신호를 기다리고 있습니다)
+        OnPlayerReady?.Invoke(player);
     }
 
+    private void SubscribeToPlayer()
+    {
+        if (player == null || player.Health == null) return;
+        player.Health.OnDeath += HandlePlayerDeathInternal;
+    }
+
+    private void UnsubscribeFromPlayer()
+    {
+        if (player == null || player.Health == null) return;
+        player.Health.OnDeath -= HandlePlayerDeathInternal;
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeFromPlayer();
+    }
+
+    /// <summary>
+    /// 플레이어의 OnDeath 이벤트를 받아 내부 부활 처리 + 외부 이벤트 발행을 중계합니다.
+    /// </summary>
+    private void HandlePlayerDeathInternal()
+    {
+        // 외부에 사망 사실을 알림 (적들이 이걸 듣고 패트롤 모드로 돌아갑니다)
+        OnPlayerDeath?.Invoke();
+
+        // 내부 부활 처리 시작
+        RespawnPlayer();
+    }
 
     // 체크포인트가 GameManager에게 "여기 새로운 부활 지점이야!"라고 알려주는 함수
     public void UpdateRespawnPoint(Vector2 newPoint)
     {
         currentRespawnPoint = newPoint;
-        Debug.Log("체크포인트 갱신 완료!");
+
     }
 
     // 플레이어가 죽었을 때 호출될 함수
     public void RespawnPlayer()
     {
         if (isRespawning) return;
-
-        // 코루틴을 사용해 시간 차(Delay)를 두고 부활시킵니다.
         StartCoroutine(RespawnCoroutine());
     }
 
@@ -148,41 +170,39 @@ public class GameManager : MonoBehaviour
     private IEnumerator RespawnCoroutine()
     {
         isRespawning = true;
-        Debug.Log("플레이어 사망! 부활 프로세스 시작...");
 
+        // 1. 사망 메뉴 표시 후 유저 선택 대기
         if (UIManager.Instance != null)
         {
-            // 지정된 시간 대기가 아니라, UI 메뉴를 띄우고 입력을 기다립니다.
             UIManager.Instance.ShowDeathMenu(true);
             waitingForUserChoice = true;
         }
 
-        // 유저가 Continue 버튼을 눌러 ResumeRespawn()이 호출될 때까지 무한 대기
         while (waitingForUserChoice)
         {
             yield return null;
         }
 
-        // 화면 암전
+        // 2. 화면 암전
         yield return StartCoroutine(UIManager.Instance.FadeOut(1f));
 
+        // 3. 어둠 속에서 위치 이동 및 체력 복구
         if (player != null)
         {
-            // 3. 어둠 속에서 몰래 위치 이동 및 체력 복구
             player.transform.position = currentRespawnPoint;
             player.Respawn();
-
-            Debug.Log("플레이어 재배치 완료.");
         }
 
+        // 4. 화면 다시 밝히기
         if (UIManager.Instance != null)
         {
-            // 4. 텍스트 지우고 화면 다시 밝히기
             yield return StartCoroutine(UIManager.Instance.FadeIn(1f));
         }
 
-        Debug.Log("부활 시퀀스 종료.");
         isRespawning = false;
+
+        // 5. 부활 완료 이벤트 발행
+        OnPlayerRespawn?.Invoke();
     }
 
     /// <summary>
@@ -192,11 +212,8 @@ public class GameManager : MonoBehaviour
     {
         if (player != null)
         {
-            // 플레이어 본인에게 데이터를 포장하라고 시킵니다.
             return player.ExportSessionData();
         }
-
-        // 플레이어가 없다면(예외 상황) 빈 상자를 보냅니다.
         return new DataManager.GameData();
     }
 }

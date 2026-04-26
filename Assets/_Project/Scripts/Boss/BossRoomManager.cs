@@ -19,7 +19,6 @@ public class BossRoomManager : MonoBehaviour
     private bool isDoorClosed = false;
     private bool hasBattleStarted = false;
     private Transform playerTransform;
-
     private bool isRoomCleared = false; // 클리어 여부 확인용 변수 추가
 
     public bool isGizmoDraw = true;
@@ -28,21 +27,48 @@ public class BossRoomManager : MonoBehaviour
     {
         if (bossHealthBar != null) bossHealthBar.gameObject.SetActive(false);
 
-        // 이미 보스가 처치된 방이라면?
-        if (DataManager.Instance != null && DataManager.Instance.sessionData.isBossDefeated)
+        // 이미 보스가 처치된 방이라면 즉시 개방 상태로
+        // (DataManager와 sessionData 모두 null 가드)
+        if (DataManager.Instance != null
+            && DataManager.Instance.sessionData != null
+            && DataManager.Instance.sessionData.isBossDefeated)
         {
             isRoomCleared = true;
-            isDoorClosed = true; // 문이 열린 상태로 유지되게 하거나, 로직에 따라 처리
+            isDoorClosed = true;
 
-            if (entranceDoor != null) entranceDoor.SetActive(false); // 문 열어두기
-            Debug.Log("[BossRoomManager] 이미 처치된 보스입니다. 방을 개방합니다.");
+            if (entranceDoor != null) entranceDoor.SetActive(false);
         }
+    }
+
+    // ==========================================
+    // 보스 사망 이벤트 구독 (매 프레임 폴링 대신 이벤트 기반)
+    // ==========================================
+    private void OnEnable()
+    {
+        if (boss != null && boss.Health != null)
+        {
+            boss.Health.OnDeath += HandleBossDeath;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (boss != null && boss.Health != null)
+        {
+            boss.Health.OnDeath -= HandleBossDeath;
+        }
+    }
+
+    private void HandleBossDeath()
+    {
+        if (isRoomCleared) return;
+        ClearRoom();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // 1단계: 플레이어가 방에 입장하면 문을 걸어 잠급니다.
-        if (!isDoorClosed && collision.CompareTag("Player"))
+        if (!isDoorClosed && collision.CompareTag(Define.GameTags.Player))
         {
             isDoorClosed = true;
             playerTransform = collision.transform;
@@ -50,52 +76,43 @@ public class BossRoomManager : MonoBehaviour
             if (entranceDoor != null)
                 entranceDoor.SetActive(true); // 문 닫힘
 
-            Debug.Log("입구 봉쇄! 긴장감 넘치는 BGM으로 변경할 타이밍입니다.");
             // TODO: BGM 정지, 컷씬 카메라 전환 등 연출 추가 가능
         }
     }
 
     private void Update()
     {
-        // 2단계: 문이 닫혔고 아직 전투가 시작되지 않았다면, 플레이어와 보스의 거리를 잽니다.
-        if (isDoorClosed && !hasBattleStarted && playerTransform != null)
+        // 2단계: 문이 닫혔고 아직 전투가 시작되지 않았다면, 플레이어와 보스의 거리 측정
+        if (!isDoorClosed || hasBattleStarted) return;
+        if (playerTransform == null || boss == null) return;
+
+        float distanceToBoss = Vector2.Distance(playerTransform.position, boss.transform.position);
+
+        if (distanceToBoss <= battleStartDistance)
         {
-            float distanceToBoss = Vector2.Distance(playerTransform.position, boss.transform.position);
+            StartBattle();
+        }
+    }
 
-            if (distanceToBoss <= battleStartDistance)
-            {
-                hasBattleStarted = true;
+    private void StartBattle()
+    {
+        hasBattleStarted = true;
 
-                // UI 활성화 및 보스 데이터 연결
-                if (bossHealthBar != null)
-                {
-                    bossHealthBar.gameObject.SetActive(true);
-                    bossHealthBar.SetBossTarget(boss, boss.Data.bossName);
-                }
-
-                Debug.Log("전투 시작! 보스가 깨어납니다!");
-                boss.WakeUp(); // 보스 강제 기상!
-
-                // TODO: 보스전 전용 BGM 재생 시작
-            }
+        // UI 활성화 및 보스 데이터 연결 (null 가드 강화)
+        if (bossHealthBar != null && boss.Data != null)
+        {
+            bossHealthBar.gameObject.SetActive(true);
+            bossHealthBar.SetBossTarget(boss, boss.Data.bossName);
         }
 
-        // 전투 중 로직: 보스가 죽었는지 매 프레임 감시합니다.
-        if (hasBattleStarted && !isRoomCleared)
-        {
-            // 보스의 체력이 0이하가 되어 죽었다면?
-            if (boss.Health.IsDead)
-            {
-                ClearRoom();
-            }
-        }
+        boss.WakeUp();
+        // TODO: 보스전 전용 BGM 재생 시작
     }
 
     // 방 클리어 처리 함수
     private void ClearRoom()
     {
         isRoomCleared = true;
-        Debug.Log("보스전 클리어! 문이 열립니다.");
 
         // 1. 보스 체력바 UI 숨기기
         if (bossHealthBar != null) bossHealthBar.gameObject.SetActive(false);

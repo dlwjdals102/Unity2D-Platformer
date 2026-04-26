@@ -24,8 +24,16 @@ public class EnemyChaseState : EnemyState
     {
         base.Update();
 
+        // 플레이어가 없으면 패트롤로 복귀
+        if (enemy.PlayerTransform == null)
+        {
+            stateMachine.ChangeState(enemy.PatrolState);
+            return;
+        }
+
         // 내가 원거리 몬스터인데, 플레이어가 너무 가깝다? -> 쫓아가지 말고 도망쳐!
-        if (enemy.attackType == AttackType.Ranged && enemy.IsPlayerInRetreatRange())
+        // (RangedEnemyData를 사용하는 적만 후퇴 행동을 가짐)
+        if (enemy.Data is RangedEnemyData && enemy.IsPlayerInRetreatRange())
         {
             stateMachine.ChangeState(enemy.RetreatState);
             return;

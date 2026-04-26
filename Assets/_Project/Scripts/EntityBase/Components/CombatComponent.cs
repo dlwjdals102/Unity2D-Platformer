@@ -37,11 +37,9 @@ public class CombatComponent : MonoBehaviour
                 // 타겟의 콜라이더 표면 중, 공격 중심점에서 가장 가까운 좌표를 찾습니다!
                 Vector2 exactHitPoint = target.ClosestPoint(attackPoint.position);
 
-                // 찾아낸 정확한 좌표에 스파크를 개별적으로 터뜨립니다.
-                if (FeedbackManager.Instance != null)
-                {
-                    //FeedbackManager.Instance.SpawnVFX("HitSpark", exactHitPoint, facingDirection);
-                }
+                // TODO  
+                // 찾아낸 정확한 좌표에 스파크를 개별적으로 터뜨립니다. 
+                // FeedbackManager.Instance.SpawnVFX("HitSpark", exactHitPoint, facingDirection);
             }
         }
 

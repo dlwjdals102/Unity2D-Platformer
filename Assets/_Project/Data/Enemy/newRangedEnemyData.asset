@@ -9,17 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb6dc84daec5c4d44909c940c3be2db9, type: 3}
-  m_Name: ArcherData
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  m_Script: {fileID: 11500000, guid: e2b23301703bb214d86a213134aabdbc, type: 3}
+  m_Name: newRangedEnemyData
+  m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyData
   maxHealth: 100
-  moveSpeed: 5
   patrolSpeed: 2
   chaseSpeed: 4
   detectionDistance: 8
   attackDistance: 5
   aggroDuration: 2
-  attackDamage: 100
+  attackDamage: 10
   attackCooldown: 2
   specialAttackCooldown: 8
   patrolDuration: 3
@@ -27,4 +26,4 @@ MonoBehaviour:
   turnWaitDuration: 0.5
   projectilePoolTag: Arrow
   retreatDistance: 3
-  retreatSpeed: 3
+  retreatSpeed: 5

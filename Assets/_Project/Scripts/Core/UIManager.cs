@@ -24,15 +24,13 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(transform.root.gameObject);
-        }
-        else
+        // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+        Instance = this;
     }
 
     private void OnEnable()
@@ -81,12 +79,12 @@ public class UIManager : MonoBehaviour
     {
         if (bgmSlider != null)
         {
-            bgmSlider.value = PlayerPrefs.GetFloat("Saved_BGM_Volume", 1f);
+            bgmSlider.value = PlayerPrefs.GetFloat(Define.PrefsKeys.SavedBGMVolume, 1f);
             bgmSlider.onValueChanged.AddListener(AudioManager.Instance.SetBGMVolume);
         }
         if (sfxSlider != null)
         {
-            sfxSlider.value = PlayerPrefs.GetFloat("Saved_SFX_Volume", 1f);
+            sfxSlider.value = PlayerPrefs.GetFloat(Define.PrefsKeys.SavedSFXVolume, 1f);
             sfxSlider.onValueChanged.AddListener(AudioManager.Instance.SetSFXVolume);
         }
     }
@@ -94,7 +92,7 @@ public class UIManager : MonoBehaviour
     public void TogglePause()
     {
         // 플레이어가 없거나(타이틀 씬), 죽었을 때는 일시정지를 막습니다.
-        if (GameManager.Instance.player == null || GameManager.Instance.player.Health.IsDead) return;
+        if (GameManager.Instance == null || GameManager.Instance.player == null || GameManager.Instance.player.Health.IsDead) return;
 
         IsPaused = !IsPaused;
 
@@ -135,7 +133,7 @@ public class UIManager : MonoBehaviour
         settingsMenuPanel.SetActive(false);
 
         // 현재 씬이 타이틀이면 아무것도 안 하고, 인게임이면 일시정지 창을 다시 엽니다.
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Title")
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == Define.SceneNames.Title)
         {
             // 타이틀 씬에서는 설정창만 닫히면 끝 (타이틀 UI는 뒤에 항상 있음)
             IsPaused = false;
@@ -161,7 +159,7 @@ public class UIManager : MonoBehaviour
 
         // 3. 타이틀 씬으로 이동 (SceneTransitionManager 활용)
         // targetPortalID를 빈 값으로 보내면 GameManager가 텔레포트를 시도하지 않습니다.
-        SceneTransitionManager.Instance.TransitionToScene("Title", "");
+        SceneTransitionManager.Instance.TransitionToScene(Define.SceneNames.Title, "");
     }
 
     // ==========================================
@@ -234,7 +232,8 @@ public class UIManager : MonoBehaviour
         // SceneTransitionManager를 통해 타이틀 씬으로 이동 (타이틀 씬 이름이 "Title"이라고 가정)
         if (SceneTransitionManager.Instance != null)
         {
-            SceneTransitionManager.Instance.TransitionToScene("Title", "None");
+            SceneTransitionManager.Instance.TransitionToScene(Define.SceneNames.Title, "None");
+            ShowDeathMenu(false);
         }
     }
 }

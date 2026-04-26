@@ -19,9 +19,7 @@ public class PlayerDeadState : PlayerState
 
         // 현재 레이어를 백업해두고, 무적 레이어로 변경합니다.
         originalLayer = player.gameObject.layer;
-        player.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-
-        Debug.Log("플레이어 사망...");
+        player.gameObject.layer = LayerMask.NameToLayer(Define.LayerNames.IgnoreRaycast);
     }
 
     public override void Update()
@@ -29,11 +27,11 @@ public class PlayerDeadState : PlayerState
         base.Update();
 
         // 3. 사망 애니메이션이 완전히 끝나면?
-        if (isAnimationFinished)
+       /* if (isAnimationFinished)
         {
             // 현재 활성화된 씬의 이름을 가져와서 다시 로드(재도전)합니다.
             GameManager.Instance.RespawnPlayer();
-        }
+        }*/
     }
 
     public override void Exit()

@@ -1,10 +1,8 @@
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
-public enum AttackType { Melee, Ranged }
 public class Enemy : Entity
 {
-    public AttackType attackType = AttackType.Melee;
 
     // ==========================================
     // 1. 상태 머신 및 상태 인스턴스
@@ -43,21 +41,6 @@ public class Enemy : Entity
         InitializeStateMachine();
     }
 
-    protected override void OnDestroy()
-    {
-        base.OnDestroy();
-        if (Health != null)
-        {
-            Health.OnTakeDamage -= HandleTakeDamage;
-            Health.OnDeath -= HandleDeath;
-        }
-        if (AnimHandler != null)
-        {
-            AnimHandler.OnAttackTriggered -= HandleTriggerAttack;
-            AnimHandler.OnAnimationFinished -= HandleAnimationFinishTrigger;
-        }
-    }
-
     private void InitializeStateMachine()
     {
         stateMachine = new StateMachine<Enemy>();
@@ -67,18 +50,14 @@ public class Enemy : Entity
         DeadState = new EnemyDeadState(this, stateMachine, "Dead");
         RetreatState = new EnemyRetreatState(this, stateMachine, "Chase");
 
-        switch (attackType)
+        // ==========================================
+        // Strategy Pattern: 공격 상태는 EnemyData(SO)가 직접 생성합니다.
+        // 새 적 타입(마법, 자폭 등)을 추가할 때 Enemy.cs 수정이 필요 없습니다.
+        // ==========================================
+        if (Data != null)
         {
-            case AttackType.Melee:
-                AttackState = new EnemyAttackState(this, stateMachine, "Attack");
-                break;
-            case AttackType.Ranged:
-                AttackState = new EnemyRangedAttackState(this, stateMachine, "Attack");
-                break;
-            default:
-                break;
+            AttackState = Data.CreateAttackState(this, stateMachine);
         }
-        
     }
 
     private void Start()
@@ -89,35 +68,78 @@ public class Enemy : Entity
             Health.Initialize(Data.maxHealth);
         }
 
-        // 피격 및 사망 이벤트 구독
+        // GameManager가 이미 플레이어를 알고 있다면 즉시 캐시 (씬 로드 후 늦게 생성된 적 대응)
+        if (GameManager.Instance != null && GameManager.Instance.player != null)
+        {
+            PlayerTransform = GameManager.Instance.player.transform;
+        }
+
+        stateMachine.Initialize(PatrolState);
+    }
+
+    // ==========================================
+    // 이벤트 구독 / 해제 (OnEnable / OnDisable 패턴으로 통일)
+    // ==========================================
+    private void OnEnable()
+    {
+        // 자기 자신의 컴포넌트 이벤트 구독
         if (Health != null)
         {
             Health.OnTakeDamage += HandleTakeDamage;
             Health.OnDeath += HandleDeath;
         }
 
-        // 애니메이션 이벤트 구독!
         if (AnimHandler != null)
         {
-            AnimHandler.OnAttackTriggered += HandleTriggerAttack; // 자식 클래스(Melee, Ranged)에서 구현한 그 공격!
+            AnimHandler.OnAttackTriggered += HandleTriggerAttack;
             AnimHandler.OnAnimationFinished += HandleAnimationFinishTrigger;
         }
 
-        // 게임이 시작될 때 플레이어를 찾아서 기억해둡니다.
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+        // GameManager의 외부 이벤트 구독 (Player 내부 구조를 모른 채 알림만 받음)
+        if (GameManager.Instance != null)
         {
-            PlayerTransform = playerObj.transform;
+            GameManager.Instance.OnPlayerReady += HandlePlayerReady;
+            GameManager.Instance.OnPlayerDeath += HandlePlayerDeath;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (Health != null)
+        {
+            Health.OnTakeDamage -= HandleTakeDamage;
+            Health.OnDeath -= HandleDeath;
         }
 
-        GameManager.Instance.player.Health.OnDeath += HandlePlayerDeath;
+        if (AnimHandler != null)
+        {
+            AnimHandler.OnAttackTriggered -= HandleTriggerAttack;
+            AnimHandler.OnAnimationFinished -= HandleAnimationFinishTrigger;
+        }
 
-        stateMachine.Initialize(PatrolState);
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPlayerReady -= HandlePlayerReady;
+            GameManager.Instance.OnPlayerDeath -= HandlePlayerDeath;
+        }
     }
+
+    /// <summary>
+    /// GameManager가 새 씬에서 플레이어를 준비 완료했을 때 호출됩니다.
+    /// 적은 GameManager의 내부 구조를 알 필요 없이 이 콜백으로 타겟을 갱신합니다.
+    /// </summary>
+    private void HandlePlayerReady(PlayerController newPlayer)
+    {
+        PlayerTransform = newPlayer != null ? newPlayer.transform : null;
+    }
+
+    /// <summary>
+    /// 플레이어가 죽었음을 GameManager가 알려주면 패트롤 모드로 강제 복귀합니다.
+    /// </summary>
     private void HandlePlayerDeath()
     {
-        // 공격 중이든, 추격 중이든 묻지도 따지지도 않고 순찰/수면 모드로 강제 전환!
-        stateMachine.ChangeState(PatrolState); // 보스는 SleepState
+        if (stateMachine.CurrentState == DeadState) return;
+        stateMachine.ChangeState(PatrolState);
     }
 
     protected override void Update()
@@ -196,13 +218,22 @@ public class Enemy : Entity
         return false;
     }
 
-    // 거리 기반 '도망 범위' 체크 함수 추가
+    /// <summary>
+    /// 원거리 적 전용 - 플레이어가 도망쳐야 할 거리에 들어왔는지 확인.
+    /// RangedEnemyData가 아니면 항상 false를 반환합니다.
+    /// </summary>
     public virtual bool IsPlayerInRetreatRange()
     {
         if (PlayerTransform == null) return false;
-        // 시야 방향과 상관없이, 플레이어와의 절대적인 거리를 계산합니다.
-        float distance = Vector2.Distance(transform.position, PlayerTransform.position);
-        return distance <= Data.retreatDistance;
+
+        // RangedEnemyData일 때만 retreatDistance 사용
+        if (Data is RangedEnemyData rangedData)
+        {
+            float distance = Vector2.Distance(transform.position, PlayerTransform.position);
+            return distance <= rangedData.retreatDistance;
+        }
+
+        return false;
     }
 
     // 대상을 향해 몸을 홱! 돌리는 스마트한 함수

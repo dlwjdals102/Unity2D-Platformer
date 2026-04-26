@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class EnemyAttackState : EnemyState
+public class EnemyMeleeAttackState : EnemyAttackStateBase
 {
-    public EnemyAttackState(Enemy entity, StateMachine<Enemy> stateMachine, string animBoolName)
+    public EnemyMeleeAttackState(Enemy entity, StateMachine<Enemy> stateMachine, string animBoolName)
         : base(entity, stateMachine, animBoolName)
     {
     }

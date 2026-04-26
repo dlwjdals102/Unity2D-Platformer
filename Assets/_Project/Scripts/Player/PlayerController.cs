@@ -1,9 +1,6 @@
-using System;
-using System.Xml;
 using Unity.VisualScripting;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class PlayerController : Entity
 {
@@ -117,14 +114,9 @@ public class PlayerController : Entity
     {
         base.Update();
 
-        // 시스템이 멈췄거나 죽었으면 입력을 받지 않음
-        // if (Time.timeScale == 0 || Health.IsDead) return;
-
         UpdateInputAndBuffers();
         UpdateTimers();
-
-        // 이동 입력: 폴링(Polling) 방식 (매 프레임 Vector2 값을 읽어옴)
-        MoveInput = InputManager.Instance.Controls.Player.Move.ReadValue<Vector2>();
+        
         StateMachine.CurrentState.Update();
     }
 
@@ -211,8 +203,6 @@ public class PlayerController : Entity
 
         // 3. 죽음 상태에서 빠져나와 다시 기본 상태(Idle)로 복귀
         StateMachine.ChangeState(IdleState);
-
-        Debug.Log("플레이어 부활 완료!");
     }
 
     // ==========================================

@@ -15,7 +15,7 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag(Define.GameTags.Player))
         {
             isPlayerInRange = true;
             // (선택) 여기서 "위쪽 화살표를 누르세요" 같은 UI 팝업을 띄우면 아주 좋습니다!
@@ -24,7 +24,7 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag(Define.GameTags.Player))
         {
             isPlayerInRange = false;
             // UI 팝업 숨기기
@@ -34,6 +34,9 @@ public class Portal : MonoBehaviour
     private void Update()
     {
         if (string.IsNullOrEmpty(targetSceneName)) return;
+        if (!isPlayerInRange) return;
+        // InputManager null 가드 추가 (씬 로드 순서에 따라 매니저가 늦게 준비될 수 있음)
+        if (InputManager.Instance == null || InputManager.Instance.Controls == null) return;
 
         // 플레이어가 포탈 범위 안에 있고, 상호작용 키(예: 위쪽 방향키)를 눌렀을 때
         if (isPlayerInRange && InputManager.Instance.Controls.Player.Interact.WasPressedThisFrame())
@@ -45,10 +48,6 @@ public class Portal : MonoBehaviour
             if (SceneTransitionManager.Instance != null)
             {
                 SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetPortalID);
-            }
-            else
-            {
-                Debug.LogError("SceneTransitionManager가 없습니다!");
             }
         }
     }

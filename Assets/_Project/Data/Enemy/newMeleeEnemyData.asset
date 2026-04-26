@@ -9,21 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb6dc84daec5c4d44909c940c3be2db9, type: 3}
-  m_Name: MeleeEnemyData
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  m_Script: {fileID: 11500000, guid: 37b0a4118d17a8d408b9f71950274314, type: 3}
+  m_Name: newMeleeEnemyData
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyData
   maxHealth: 100
-  moveSpeed: 5
   patrolSpeed: 2
   chaseSpeed: 4
   detectionDistance: 8
   attackDistance: 1.5
   aggroDuration: 2
-  attackDamage: 10
+  attackDamage: 50
   attackCooldown: 2
   specialAttackCooldown: 8
   patrolDuration: 3
   idleDuration: 2
   turnWaitDuration: 0.5
-  projectilePoolTag: Arrow
-  allowedAttacks: 

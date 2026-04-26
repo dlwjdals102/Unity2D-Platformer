@@ -45,17 +45,13 @@ public class AudioManager : MonoBehaviour
 
     private void Awake()
     {
-        // 싱글톤 세팅
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(transform.root.gameObject);
-        }
-        else
+        // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
+        Instance = this;
 
         // 게임이 시작될 때, 리스트에 등록된 모든 소리에 대해 AudioSource를 생성하고 세팅합니다.
         foreach (Sound s in sounds)
@@ -90,21 +86,21 @@ public class AudioManager : MonoBehaviour
     public void SetBGMVolume(float volume)
     {
         if (mainMixer == null) return;
-        mainMixer.SetFloat("BGM_Volume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("Saved_BGM_Volume", volume);
+        mainMixer.SetFloat(Define.MixerParameters.BGMVolume, Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat(Define.PrefsKeys.SavedBGMVolume, volume);
     }
 
     public void SetSFXVolume(float volume)
     {
         if (mainMixer == null) return;
-        mainMixer.SetFloat("SFX_Volume", Mathf.Log10(volume) * 20);
-        PlayerPrefs.SetFloat("Saved_SFX_Volume", volume);
+        mainMixer.SetFloat(Define.MixerParameters.SFXVolume, Mathf.Log10(volume) * 20);
+        PlayerPrefs.SetFloat(Define.PrefsKeys.SavedSFXVolume, volume);
     }
 
     private void LoadVolumeSettings()
     {
-        float bgm = PlayerPrefs.GetFloat("Saved_BGM_Volume", 1f);
-        float sfx = PlayerPrefs.GetFloat("Saved_SFX_Volume", 1f);
+        float bgm = PlayerPrefs.GetFloat(Define.PrefsKeys.SavedBGMVolume, 1f);
+        float sfx = PlayerPrefs.GetFloat(Define.PrefsKeys.SavedSFXVolume, 1f);
 
         SetBGMVolume(bgm);
         SetSFXVolume(sfx);

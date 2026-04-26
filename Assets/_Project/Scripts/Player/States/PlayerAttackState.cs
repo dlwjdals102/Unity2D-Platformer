@@ -21,7 +21,7 @@ public class PlayerAttackState : PlayerState
         player.Movement.SetVelocity(0f, player.Movement.RB.linearVelocity.y);
 
         // 현재 몇 단 공격인지 애니메이터에게 숫자로 알려줍니다!
-        player.Anim.SetInteger("ComboCounter", player.comboCounter);
+        player.Anim.SetInteger(Define.AnimatorParameters.ComboCounter, player.comboCounter);
     }
 
     public override void Update()
@@ -43,7 +43,7 @@ public class PlayerAttackState : PlayerState
         // 애니메이션의 마지막 프레임에 도달했을 때 행동 결산!
         if (isAnimationFinished)
         {
-            // 결산 1순위: 생존을 위한 긴급 대시! (공격보다 회피가 우선되어야 덜 억울합니다)
+            // 결산 1순위: 생존을 위한 긴급 대시! (공격보다 회피가 우선)
             if (dashRegistered && player.CanDash)
             {
                 stateMachine.ChangeState(player.DashState);
@@ -51,10 +51,11 @@ public class PlayerAttackState : PlayerState
             }
 
             // 결산 2순위: 콤보 공격 이어나가기
+            // StateMachine이 동일 상태 재진입을 막기 때문에 ReEnter()로 강제 재진입
             if (attackRegistered && player.comboCounter < 3)
             {
                 player.comboCounter++;
-                stateMachine.ChangeState(player.AttackState); // 자기 자신으로 다시 진입
+                stateMachine.ReEnter(); // 자기 자신으로 다시 진입
                 return;
             }
 
@@ -75,15 +76,6 @@ public class PlayerAttackState : PlayerState
     // 애니메이션 타격 프레임 이벤트가 발생하면 이 곳이 실행됩니다!
     public override void TriggerAttack()
     {
-        // 칼을 휘두르는 궤적(Slash)은 플레이어 앞에서 한 번만 소환 (기존 유지)
-        Vector3 vfxOffset = new Vector3(player.Movement.FacingDirection * 1.2f, 0.5f, 0f);
-        Vector3 spawnPosition = player.transform.position + vfxOffset;
-
-        if (FeedbackManager.Instance != null)
-        {
-            //FeedbackManager.Instance.SpawnVFX("PlayerSlash", spawnPosition, player.Movement.FacingDirection);
-        }
-
         // Combat 컴포넌트에게 "때려!" 라고 직접 지시합니다. (극강의 직관성!)
         bool hitSomething = player.Combat.PerformMeleeAttack(player.Data.attackDamage, player.Movement.FacingDirection);
 

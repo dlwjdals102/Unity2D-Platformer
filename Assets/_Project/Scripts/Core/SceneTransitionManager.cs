@@ -11,16 +11,13 @@ public class SceneTransitionManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(transform.root.gameObject); // 씬이 넘어가도 매니저 파괴 방지
-        }
-        else
+        // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
+        Instance = this;
     }
 
     // 포탈이 이 함수를 호출하여 씬 이동을 요청합니다.
@@ -32,7 +29,7 @@ public class SceneTransitionManager : MonoBehaviour
         if (GameManager.Instance != null && DataManager.Instance != null)
         {
             // 플레이어가 존재하고, 목적지가 타이틀이 아닐 때만 "진짜 세이브" 실행
-            if (GameManager.Instance.player != null && sceneName != "Title")
+            if (GameManager.Instance.player != null && sceneName != Define.SceneNames.Title)
             {
                 DataManager.GameData package = GameManager.Instance.ExportPlayerSession();
 
@@ -41,7 +38,6 @@ public class SceneTransitionManager : MonoBehaviour
                 package.lastSceneName = sceneName;
 
                 DataManager.Instance.SaveTransitionData(package);
-                Debug.Log("[SceneTransition] 플레이어 데이터를 성공적으로 포장했습니다.");
             }
         }
 

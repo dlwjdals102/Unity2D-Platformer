@@ -9,9 +9,8 @@ public class BossChaseState : BossState
     {
         base.Update();
 
-        // 룸 매니저 트리거 안에 들어온 플레이어를 타겟으로 삼습니다. (임시로 GameObject.Find 사용, 최적화 가능)
-        Transform player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
+        // 캐시된 PlayerTransform 사용 (매 프레임 GameObject.Find 호출 X)
+        Transform player = boss.PlayerTransform;
         if (player == null) return;
 
         boss.TurnTowards(player);

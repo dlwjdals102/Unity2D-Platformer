@@ -13,7 +13,7 @@ public class Boss : Entity
     // 나중에 하나씩 구현해나갈 보스 전용 상태들
     public BossSleepState SleepState { get; private set; }
     public BossIntroState IntroState { get; private set; }
-    public BossIdleState IdleState { get; private set; }     // (쿨타임 & 다음 공격 생각)
+    public BossIdleState IdleState { get; private set; }
     public BossChaseState ChaseState { get; private set; }
     public BossMeleeAttackState MeleeAttackState { get; private set; }
     public BossShockwaveState ShockwaveState { get; private set; }
@@ -22,6 +22,11 @@ public class Boss : Entity
     [Header("Detection Setup")]
     public LayerMask playerLayer;
     public Transform playerCheck;
+
+    /// <summary>
+    /// 플레이어의 Transform 캐시.
+    /// GameManager.OnPlayerReady 이벤트로 자동 갱신되므로 매 프레임 Find 호출 불필요.
+    /// </summary>
     public Transform PlayerTransform { get; private set; }
 
     [Header("Combat Settings")]
@@ -51,12 +56,20 @@ public class Boss : Entity
             Health.Initialize(Data.maxHealth);
         }
 
-        // 추가: 씬에 진입했을 때 이미 보스가 처치된 상태인지 확인
-        if (DataManager.Instance != null && DataManager.Instance.sessionData.isBossDefeated)
+        // 이미 보스가 처치된 상태인지 확인
+        // (DataManager와 sessionData 모두 null 가드)
+        if (DataManager.Instance != null
+            && DataManager.Instance.sessionData != null
+            && DataManager.Instance.sessionData.isBossDefeated)
         {
-            // AI를 깨우지 않고 즉시 사망 상태로 진입 (애니메이션은 'Dead' 상태로 고정)
             stateMachine.ChangeState(DeadState);
             return;
+        }
+
+        // GameManager가 이미 플레이어를 알고 있다면 즉시 캐시
+        if (GameManager.Instance != null && GameManager.Instance.player != null)
+        {
+            PlayerTransform = GameManager.Instance.player.transform;
         }
 
         // 보스는 태어나자마자 무조건 대기(Sleep) 상태로 시작합니다!
@@ -96,19 +109,21 @@ public class Boss : Entity
             if (randomVal <= currentWeight)
             {
                 NextAttack = attack;
-                Debug.Log($"[가챠 완료] 주사위: {randomVal:F1} / 총합: {totalWeight} ? 선택됨: {NextAttack.attackName} (트리거: {NextAttack.animTriggerName})");
                 return;
             }
         }
     }
 
     // ==========================================
-    // 2. 컴포넌트 이벤트 구독 (기획 반영)
+    // 이벤트 구독 / 해제
     // ==========================================
     protected virtual void OnEnable()
     {
-        Health.OnTakeDamage += HandleTakeDamage;
-        Health.OnDeath += HandleDeath;
+        if (Health != null)
+        {
+            Health.OnTakeDamage += HandleTakeDamage;
+            Health.OnDeath += HandleDeath;
+        }
 
         if (AnimHandler != null)
         {
@@ -118,12 +133,21 @@ public class Boss : Entity
 
         PhaseComponent phaseComp = GetComponent<PhaseComponent>();
         if (phaseComp != null) phaseComp.OnPhaseChanged += HandlePhaseChange;
+
+        // GameManager 이벤트 구독 (플레이어 캐싱용)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPlayerReady += HandlePlayerReady;
+        }
     }
 
     protected virtual void OnDisable()
     {
-        Health.OnTakeDamage -= HandleTakeDamage;
-        Health.OnDeath -= HandleDeath;
+        if (Health != null)
+        {
+            Health.OnTakeDamage -= HandleTakeDamage;
+            Health.OnDeath -= HandleDeath;
+        }
 
         if (AnimHandler != null)
         {
@@ -133,14 +157,25 @@ public class Boss : Entity
 
         PhaseComponent phaseComp = GetComponent<PhaseComponent>();
         if (phaseComp != null) phaseComp.OnPhaseChanged -= HandlePhaseChange;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPlayerReady -= HandlePlayerReady;
+        }
+    }
+
+    /// <summary>
+    /// GameManager가 새 씬에서 플레이어를 준비 완료했을 때 호출됩니다.
+    /// </summary>
+    private void HandlePlayerReady(PlayerController newPlayer)
+    {
+        PlayerTransform = newPlayer != null ? newPlayer.transform : null;
     }
 
     private void HandleTakeDamage(Transform damageSource)
     {
-        // 보스는 넉백되지 않으며 피격 애니메이션(Hurt)으로 강제 전환되지 않습니다! (슈퍼아머)
-        // 만약 피격 시 이펙트를 터뜨리거나 데미지 텍스트를 띄운다면 여기서 처리합니다.
-
-        // (참고: PhaseComponent가 Health를 구독하고 있으므로, 페이즈 전환은 알아서 작동합니다!)
+        // 보스는 슈퍼아머: 넉백/Hurt 상태 전환 없음
+        // 추후 피격 이펙트나 데미지 텍스트는 여기서 처리
     }
 
     private void HandleDeath()
@@ -151,15 +186,13 @@ public class Boss : Entity
 
     private void HandlePhaseChange(int phaseIndex, PhaseInfo info)
     {
-        Debug.Log($"보스 {phaseIndex + 1} 페이즈 진입! 데이터를 스왑합니다.");
-
-        // 1. 디렉터님이 만든 PhaseComponent에서 새 데이터를 받아 통째로 갈아끼웁니다.
+        // 1. PhaseComponent에서 받은 새 데이터로 통째로 교체
         if (info.newPhaseData is BossData newBossData)
         {
             Data = newBossData;
         }
 
-        // 2. 2페이즈 전용 포효(IntroState)를 재활용하여 멋지게 연출!
+        // 2. 페이즈 전환 시 IntroState 재활용으로 연출
         stateMachine.ChangeState(IntroState);
     }
 

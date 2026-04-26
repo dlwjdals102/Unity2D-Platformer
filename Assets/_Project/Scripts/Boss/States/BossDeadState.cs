@@ -16,22 +16,23 @@ public class BossDeadState : BossState
         Collider2D coll = boss.GetComponent<Collider2D>();
         if (coll != null) coll.enabled = false;
 
-        // 2. 처치 기록에 따른 조건부 연출
+        // 2. 처치 기록에 따른 조건부 연출 (DataManager null 가드)
+        if (DataManager.Instance == null || DataManager.Instance.sessionData == null) return;
+
         if (!DataManager.Instance.sessionData.isBossDefeated)
         {
             // [최초 처치 시에만 실행되는 로직]
-            DataManager.Instance.sessionData.isBossDefeated = true; // 기록 갱신
+            DataManager.Instance.sessionData.isBossDefeated = true;
 
-            Debug.Log("[Boss] 최초 처치! 화려한 사망 연출을 실행합니다.");
+            // 보스 처치는 큰 마일스톤이므로 디스크에 즉시 저장합니다.
+            // 만약 이 직후 게임이 비정상 종료되어도 처치 기록이 보존됩니다.
+            DataManager.Instance.SaveToFile();
 
-            // 여기에 카메라 쉐이크나 슬로우 모션 코드를 넣으세요.
-            // 예: FeedbackManager.Instance.TriggerCameraShake(5f, 0.5f);
+            // TODO: 카메라 쉐이크, 슬로우 모션, 보상 드롭 등 화려한 연출 추가
+            // 예: FeedbackManager.Instance?.TriggerCameraShake(5f);
         }
-        else
-        {
-            // [씬 재진입 시 실행되는 로직]
-            Debug.Log("[Boss] 이미 처치된 보스입니다. 연출 없이 시체 상태를 유지합니다.");
-        }
+        // else: 이미 처치된 보스 - 연출 없이 시체 상태만 유지
+
     }
 
 }

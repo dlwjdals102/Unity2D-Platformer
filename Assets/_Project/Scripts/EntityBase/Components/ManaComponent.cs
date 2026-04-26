@@ -54,6 +54,15 @@ public class ManaComponent : MonoBehaviour
         NotifyManaChanged();
     }
 
+    /// <summary>
+    /// 마나를 최대치까지 회복합니다 (체크포인트, 휴식 지점 등에서 사용).
+    /// </summary>
+    public void RestoreFullMana()
+    {
+        CurrentMana = MaxMana;
+        NotifyManaChanged();
+    }
+
     public void LoadSavedMana(float savedMana)
     {
         // 전역 창고에서 가져온 마나 수치를 적용합니다.

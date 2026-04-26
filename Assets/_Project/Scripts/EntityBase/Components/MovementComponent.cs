@@ -41,7 +41,7 @@ public class MovementComponent : MonoBehaviour
     // ==========================================
     public void SetVelocity(float xVelocity, float yVelocity)
     {
-        _rb.linearVelocity = new Vector2(xVelocity, yVelocity);
+        RB.linearVelocity = new Vector2(xVelocity, yVelocity);
 
         if (CanAutoFlip)
             FlipController(xVelocity); // 속도에 맞춰 자동으로 방향 뒤집기
@@ -49,7 +49,7 @@ public class MovementComponent : MonoBehaviour
 
     public void ZeroVelocity()
     {
-        _rb.linearVelocity = Vector2.zero;
+        RB.linearVelocity = Vector2.zero;
     }
 
     // ==========================================

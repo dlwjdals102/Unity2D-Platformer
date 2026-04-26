@@ -34,7 +34,7 @@ public abstract class Entity : MonoBehaviour
         if (Anim != null && Movement.RB != null)
         {
             // 실제 물리 엔진의 X축 속도의 절대값(0~...)을 애니메이터의 Float 파라미터로 계속 넘겨줍니다.
-            // Anim.SetFloat("xVelocity", Mathf.Abs(Movement.RB.linearVelocity.x));
+            Anim.SetFloat(Define.AnimatorParameters.XVelocity, Mathf.Abs(Movement.RB.linearVelocity.x));
         }
     }
 

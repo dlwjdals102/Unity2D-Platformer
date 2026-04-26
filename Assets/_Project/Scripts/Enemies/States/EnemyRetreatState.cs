@@ -42,8 +42,7 @@ public class EnemyRetreatState : EnemyState
             // 멈춰 세웁니다.
             enemy.Movement.SetVelocity(0f, enemy.Movement.RB.linearVelocity.y);
 
-            // [버그 픽스 2] 벽을 보고 쏘는 바보짓을 막기 위해, 
-            // 상태를 넘기기 '직전'에 강제로 플레이어 쪽으로 몸을 홱! 돌려줍니다.
+            // 벽을 보고 쏘는 바보짓을 막기 위해, 강제로 플레이어 쪽으로 몸을 돌립니다.
             enemy.TurnTowards(enemy.PlayerTransform);
 
             // 발악 공격 시작!
@@ -51,8 +50,9 @@ public class EnemyRetreatState : EnemyState
         }
         else
         {
-            // 뒤가 안전하다면 빤스런!
-            enemy.Movement.SetVelocity(retreatDir * enemy.Data.retreatSpeed, enemy.Movement.RB.linearVelocity.y);
+            // 뒤가 안전하다면 도망 (RangedEnemyData에서 retreatSpeed 가져오기)
+            float speed = (enemy.Data is RangedEnemyData rangedData) ? rangedData.retreatSpeed : enemy.Data.chaseSpeed;
+            enemy.Movement.SetVelocity(retreatDir * speed, enemy.Movement.RB.linearVelocity.y);
         }
     }
 }

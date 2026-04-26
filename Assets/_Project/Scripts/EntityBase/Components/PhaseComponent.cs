@@ -35,7 +35,17 @@ public class PhaseComponent : MonoBehaviour
     private void Awake()
     {
         health = GetComponent<HealthComponent>();
-        health.OnHealthChanged += CheckPhase;
+    }
+
+    // 이벤트 구독 패턴을 OnEnable/OnDisable로 통일
+    private void OnEnable()
+    {
+        if (health != null) health.OnHealthChanged += CheckPhase;
+    }
+
+    private void OnDisable()
+    {
+        if (health != null) health.OnHealthChanged -= CheckPhase;
     }
 
     private void CheckPhase(float currentHealth, float maxHealth)
@@ -66,10 +76,5 @@ public class PhaseComponent : MonoBehaviour
 
         // 2. C# 스크립트들에게 페이즈 변경 사실과 새로운 데이터를 방송
         OnPhaseChanged?.Invoke(currentPhaseIndex, triggeredPhase);
-    }
-
-    private void OnDestroy()
-    {
-        if (health != null) health.OnHealthChanged -= CheckPhase;
     }
 }
