@@ -36,9 +36,53 @@
 기술적 의사결정과 트러블슈팅 과정은 노션 포트폴리오에서 자세히 확인하실 수 있습니다.
 
 <!-- TODO: 노션 포트폴리오 공개 링크 삽입 -->
-👉 **[노션 포트폴리오 바로가기](https://www.notion.so/PLACEHOLDER)**
+👉 **[노션 포트폴리오 바로가기](https://cookie-lock-dbc.notion.site/Unity-2D-34e87bfb3960805ea2b6e504c4e6c4de?source=copy_link)**
 
-## 🏗️ 프로젝트 구조
+## 🏗️ 시스템 아키텍처
+
+```mermaid
+classDiagram
+    class MonoBehaviour
+    class Entity {
+        <<abstract>>
+        +HealthComponent Health
+        +MovementComponent Movement
+        +CombatComponent Combat
+    }
+    class HealthComponent {
+        +TakeDamage()
+        +OnDeath event
+    }
+    class MovementComponent {
+        +SetVelocity()
+        +IsGrounded()
+    }
+    class CombatComponent {
+        +PerformMeleeAttack()
+        +FireProjectile()
+    }
+    class ManaComponent
+    class PhaseComponent
+    class PlayerController
+    class Enemy
+    class Boss
+
+    MonoBehaviour <|-- Entity
+    Entity <|-- PlayerController
+    Entity <|-- Enemy
+    Entity <|-- Boss
+
+    Entity *-- HealthComponent
+    Entity *-- MovementComponent
+    Entity *-- CombatComponent
+    PlayerController *-- ManaComponent
+    Boss *-- PhaseComponent
+```
+
+> Boss는 의도적으로 Enemy를 상속받지 않고 Entity의 형제 클래스로 두었습니다.<br>
+> Enemy의 순찰/후퇴/감지 등은 Boss에게 의미가 없는 더미 코드가 되기 때문입니다 (LSP 원칙).
+
+## 📁 프로젝트 구조
 
 ```
 Assets/Scripts/
@@ -70,6 +114,20 @@ Assets/Scripts/
 - **이메일**: dlwjdals102@naver.com
 - **포지션**: 게임 클라이언트 프로그래머 (신입)
 
+## 📜 사용된 에셋 (Asset Credits)
+
+본 프로젝트는 다음 무료 에셋을 사용했습니다. 모든 에셋은 라이센스에 따라 적법하게 사용되었습니다.
+
+### Graphics
+<!-- TODO: 실제로 사용한 에셋만 남기고 나머지는 삭제 -->
+- **Mossy Cavern** by Maaot — [itch.io](https://maaot.itch.io/mossy-cavern)
+- **2D DarkCave Assets** by Maaot — [itch.io](https://maaot.itch.io/2d-browncave-assets)
+- **Boss: Undead Executioner** by Kronovi — itch.io
+
+### Tools
+- Unity 6 (Unity Technologies)
+- Cinemachine, Input System, Universal Render Pipeline (Unity Package)
+
 ---
 
-> 본 프로젝트는 포트폴리오 목적으로 제작되었으며, 사용된 일부 에셋의 저작권은 원작자에게 있습니다.
+> 본 프로젝트는 포트폴리오 목적으로 제작되었으며, 사용된 에셋의 저작권은 원작자에게 있습니다.
