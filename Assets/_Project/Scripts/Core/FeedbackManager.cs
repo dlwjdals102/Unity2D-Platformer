@@ -19,16 +19,13 @@ public class FeedbackManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(transform.root.gameObject);
-        }
-        else
+        // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
+        Instance = this;
 
         // 컴포넌트 자동 할당
         impulseSource = GetComponent<CinemachineImpulseSource>();

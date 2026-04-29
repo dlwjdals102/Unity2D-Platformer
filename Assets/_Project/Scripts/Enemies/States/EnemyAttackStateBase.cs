@@ -1,3 +1,5 @@
+using UnityEngine;
+
 /// <summary>
 /// 모든 적 공격 상태의 추상 베이스.
 /// 근접/원거리/마법/자폭 등 모든 공격 행동은 이 클래스를 상속받습니다.
@@ -10,4 +12,15 @@ public abstract class EnemyAttackStateBase : EnemyState
 {
     protected EnemyAttackStateBase(Enemy entity, StateMachine<Enemy> stateMachine, string animBoolName)
         : base(entity, stateMachine, animBoolName) { }
+
+    public override void Enter()
+    {
+        base.Enter();
+
+        // 공격 시작 시 쿨타임 시작점 기록
+        enemy.lastAttackTime = Time.time;
+
+        // 공격 시작 시 플레이어 쪽으로 회전
+        enemy.TurnTowards(enemy.PlayerTransform);
+    }
 }

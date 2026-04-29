@@ -32,6 +32,14 @@ public class EnemyRangedAttackState : EnemyAttackStateBase
         }
     }
 
+    public override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        // 타격 중 넉백을 받아도 미끄러지지 않도록 꽉 잡아줍니다.
+        enemy.Movement.SetVelocity(0f, enemy.Movement.RB.linearVelocity.y);
+    }
+
     // 애니메이션 타격 프레임 이벤트가 발생하면 이 곳이 실행됩니다!
     public override void TriggerAttack()
     {
@@ -51,5 +59,10 @@ public class EnemyRangedAttackState : EnemyAttackStateBase
             fireDirection,
             rangedData.attackDamage
         );
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.Play("SFX_Fire");
+        }
     }
 }

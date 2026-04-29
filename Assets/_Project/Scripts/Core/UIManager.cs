@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -22,6 +23,10 @@ public class UIManager : MonoBehaviour
 
     public bool IsPaused { get; private set; } = false;
 
+    private Coroutine activeFadeRoutine; // 현재 실행 중인 페이드를 저장
+
+    private System.Action<InputAction.CallbackContext> pauseAction;
+
     private void Awake()
     {
         // 표준 싱글톤 패턴 (DontDestroyOnLoad는 부모 CoreManager가 처리)
@@ -31,6 +36,8 @@ public class UIManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        pauseAction = ctx => TogglePause();
     }
 
     private void OnEnable()
@@ -38,7 +45,7 @@ public class UIManager : MonoBehaviour
         // InputManager의 Controls에 접근하여 Pause 액션이 수행될 때 TogglePause 호출
         if (InputManager.Instance != null && InputManager.Instance.Controls != null)
         {
-            InputManager.Instance.Controls.UI.Pause.performed += ctx => TogglePause();
+            InputManager.Instance.Controls.UI.Pause.performed += pauseAction;
         }
     }
 
@@ -46,7 +53,7 @@ public class UIManager : MonoBehaviour
     {
         if (InputManager.Instance != null && InputManager.Instance.Controls != null)
         {
-            InputManager.Instance.Controls.UI.Pause.performed -= ctx => TogglePause();
+            InputManager.Instance.Controls.UI.Pause.performed -= pauseAction;
         }
     }
 
@@ -127,7 +134,11 @@ public class UIManager : MonoBehaviour
     }
 
     // 설정창 열기/닫기 버튼용
-    public void OpenSettings() { settingsMenuPanel.SetActive(true); pauseMenuPanel.SetActive(false); }
+    public void OpenSettings() 
+    {
+        settingsMenuPanel.SetActive(true); 
+        pauseMenuPanel.SetActive(false); 
+    }
     public void CloseSettings() 
     {
         settingsMenuPanel.SetActive(false);
@@ -165,15 +176,38 @@ public class UIManager : MonoBehaviour
     // ==========================================
     // 페이드 로직
     // ==========================================
+
+    public bool IsFadeComplete { get; private set; } = true;
+
+    public void StartFadeOut(float duration = -1f)
+    {
+        if (activeFadeRoutine != null)
+        {
+            StopCoroutine(activeFadeRoutine);
+        }
+        IsFadeComplete = false;
+        activeFadeRoutine = StartCoroutine(FadeOut(duration));
+    }
+
+    public void StartFadeIn(float duration = -1f)
+    {
+        if (activeFadeRoutine != null)
+        {
+            StopCoroutine(activeFadeRoutine);
+        }
+        IsFadeComplete = false;
+        activeFadeRoutine = StartCoroutine(FadeIn(duration));
+    }
+
     public IEnumerator FadeOut(float duration = -1f)
     {
         float targetDuration = (duration < 0) ? defaultFadeDuration : duration;
-        if (fadeImage == null) yield break;
+        if (fadeImage == null) { IsFadeComplete = true; yield break; } 
 
         fadeImage.gameObject.SetActive(true);
         Color c = fadeImage.color;
-        float timer = 0f;
 
+        float timer = 0f;
         while (timer < targetDuration)
         {
             timer += Time.deltaTime;
@@ -183,16 +217,19 @@ public class UIManager : MonoBehaviour
         }
         c.a = 1f;
         fadeImage.color = c;
+
+        activeFadeRoutine = null;
+        IsFadeComplete = true;
     }
 
     public IEnumerator FadeIn(float duration = -1f)
     {
         float targetDuration = (duration < 0) ? defaultFadeDuration : duration;
-        if (fadeImage == null) yield break;
+        if (fadeImage == null) { IsFadeComplete = true; yield break; }
 
         Color c = fadeImage.color;
-        float timer = 0f;
 
+        float timer = 0f;
         while (timer < targetDuration)
         {
             timer += Time.deltaTime;
@@ -203,6 +240,9 @@ public class UIManager : MonoBehaviour
         c.a = 0f;
         fadeImage.color = c;
         fadeImage.gameObject.SetActive(false);
+
+        activeFadeRoutine = null;
+        IsFadeComplete = true;
     }
 
     // ==========================================

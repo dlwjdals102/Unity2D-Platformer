@@ -44,8 +44,6 @@ public class HealthComponent : MonoBehaviour, IDamageable
         CurrentHealth -= damage;
         CurrentHealth = Mathf.Clamp(CurrentHealth, 0, MaxHealth); // 0 밑으로 떨어지지 않게 고정
 
-        Debug.Log($"{damageSource.name} 이 {this.name}에게 {damage} 의 피해를 입힘");
-
         // 체력이 깎였으니 방송 송출
         NotifyHealthChanged(); 
 

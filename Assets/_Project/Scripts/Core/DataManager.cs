@@ -99,8 +99,6 @@ public class DataManager : MonoBehaviour
 
         // 저장 파일도 함께 삭제 (새 게임이므로)
         DeleteSaveFile();
-
-        Debug.Log("[DataManager] 새 게임을 위해 세션 데이터가 SO 기반으로 초기화되었습니다.");
     }
 
     /// <summary>

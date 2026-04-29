@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -33,12 +34,17 @@ public class AudioManager : MonoBehaviour
     [Header("Sound List")]
     public Sound[] sounds;
 
+    private Dictionary<string, Sound> soundDictionary;
+
     // BGM 전용 턴테이블 2대와 믹서 그룹
     [Header("BGM Settings")]
     public AudioMixerGroup bgmMixerGroup;
     private AudioSource bgmSourceA;
     private AudioSource bgmSourceB;
     private bool isPlayingA = true; // 현재 A가 재생 중인지 추적
+
+    // 현재 재생 중인 BGM 이름 추적 (같은 BGM 중복 재생 방지용)
+    private string currentBGMName = "";
 
     [Header("Main Settings")]
     public AudioMixer mainMixer;
@@ -63,6 +69,15 @@ public class AudioManager : MonoBehaviour
 
             // 핵심 추가: 생성된 AudioSource에 믹서 파이프라인 연결!
             s.source.outputAudioMixerGroup = s.mixerGroup;
+        }
+
+        soundDictionary = new Dictionary<string, Sound>(sounds.Length);
+        foreach (Sound s in sounds)
+        {
+            if (!soundDictionary.ContainsKey(s.name))
+                soundDictionary.Add(s.name, s);
+            else
+                Debug.LogWarning($"[AudioManager] 이미 존재합니다.: {s.name}");
         }
 
         // 게임 시작 시 BGM 전용 플레이어 2대를 몸체에 부착하고 기본 세팅
@@ -112,9 +127,16 @@ public class AudioManager : MonoBehaviour
     public void Play(string name)
     {
         // 이름이 일치하는 사운드를 찾습니다.
-        Sound s = System.Array.Find(sounds, sound => sound.name == name);
+        /* Sound s = System.Array.Find(sounds, sound => sound.name == name);
 
-        if (s == null)
+         if (s == null)
+         {
+             Debug.LogWarning("사운드를 찾을 수 없습니다: " + name);
+             return;
+         }*/
+
+        // 이름이 일치하는 사운드를 찾습니다.
+        if (!soundDictionary.TryGetValue(name, out Sound s))
         {
             Debug.LogWarning("사운드를 찾을 수 없습니다: " + name);
             return;
@@ -138,9 +160,15 @@ public class AudioManager : MonoBehaviour
     // ==========================================
     public void PlayBGM(string name, float fadeDuration = 1.5f)
     {
-        // 1. 재생할 BGM 데이터를 찾습니다.
+        // 0. 같은 BGM이 이미 재생 중이면 무시 (씬 전환 시 끊김 방지)
+        if (currentBGMName == name) return;
+
+        /*// 1. 재생할 BGM 데이터를 찾습니다.
         Sound s = System.Array.Find(sounds, sound => sound.name == name);
-        if (s == null) return;
+        if (s == null) return;*/
+
+        // 1. 재생할 BGM 데이터를 찾습니다.
+        if (!soundDictionary.TryGetValue(name, out Sound s)) return;
 
         // 2. 현재 재생 중인 소스와 새롭게 재생할 소스를 결정합니다.
         AudioSource activeSource = isPlayingA ? bgmSourceA : bgmSourceB;
@@ -156,6 +184,7 @@ public class AudioManager : MonoBehaviour
 
         // 5. 턴테이블 교체
         isPlayingA = !isPlayingA;
+        currentBGMName = name;
     }
 
     // 서서히 볼륨을 조절하는 마법의 코루틴

@@ -1,5 +1,3 @@
-using Unity.VisualScripting;
-using UnityEditorInternal;
 using UnityEngine;
 
 public class PlayerController : Entity
@@ -193,13 +191,9 @@ public class PlayerController : Entity
         Movement.RB.gravityScale = scale;
     }
     
-    public void Respawn()
+    protected override void Respawn()
     {
-        // 1. 물리력 초기화 (떨어지던 중이었다면 멈춤)
-        Movement.ZeroVelocity();
-
-        // 2. 체력을 다시 꽉 채움 (Entity의 Heal 함수 활용)
-        Health.RestoreFullHealth();
+        base.Respawn();
 
         // 3. 죽음 상태에서 빠져나와 다시 기본 상태(Idle)로 복귀
         StateMachine.ChangeState(IdleState);

@@ -43,6 +43,14 @@ public abstract class Entity : MonoBehaviour
         // 메모리 누수 방지 (자식들이 override해서 구독 해제용으로 씁니다)
     }
 
+    protected virtual void Respawn()
+    {
+        // 1. 물리력 초기화 (떨어지던 중이었다면 멈춤)
+        Movement.ZeroVelocity();
+        // 2. 체력을 다시 꽉 채움 (Entity의 Heal 함수 활용)
+        Health.RestoreFullHealth();
+    }
+
     // 공격자의 위치를 바탕으로 넉백 방향을 계산합니다.
     public void DetermineKnockbackDirection(Transform damageSource)
     {

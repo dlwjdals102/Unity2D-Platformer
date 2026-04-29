@@ -14,8 +14,9 @@ public class EnemyHurtState : EnemyState
         // 피격 상태에 돌입하면 자동 뒤집기 기능을 잠급니다. (때린 놈을 계속 노려보게 됨)
         enemy.Movement.CanAutoFlip = false;
 
+        if (enemy.IsLedgeDetected() && enemy.IsLedgeBehindDetected())
         // 피격 시 플레이어가 바라보는 반대 방향으로 넉백!
-        enemy.Movement.SetVelocity(enemy.KnockbackDirection * enemy.knockbackForceX, enemy.knockbackForceY);
+            enemy.Movement.SetVelocity(enemy.KnockbackDirection * enemy.knockbackForceX, enemy.knockbackForceY);
     }
 
     public override void Update()

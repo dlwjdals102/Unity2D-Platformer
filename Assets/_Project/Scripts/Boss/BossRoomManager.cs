@@ -5,7 +5,7 @@ public class BossRoomManager : MonoBehaviour
 {
     [Header("Room Settings")]
     [Tooltip("닫힐 입구 문 오브젝트")]
-    public GameObject entranceDoor;
+    public GameObject[] entranceDoors;
     [Tooltip("전투를 시작할 보스 객체")]
     public Boss boss;
 
@@ -27,6 +27,14 @@ public class BossRoomManager : MonoBehaviour
     {
         if (bossHealthBar != null) bossHealthBar.gameObject.SetActive(false);
 
+        if (entranceDoors != null)
+        {
+            foreach (var door in entranceDoors)
+            {
+                door.SetActive(false);
+            }
+        }
+
         // 이미 보스가 처치된 방이라면 즉시 개방 상태로
         // (DataManager와 sessionData 모두 null 가드)
         if (DataManager.Instance != null
@@ -36,7 +44,13 @@ public class BossRoomManager : MonoBehaviour
             isRoomCleared = true;
             isDoorClosed = true;
 
-            if (entranceDoor != null) entranceDoor.SetActive(false);
+            if (entranceDoors != null)
+            {
+                foreach (var door in entranceDoors)
+                {
+                    door.SetActive(false);
+                }
+            }
         }
     }
 
@@ -73,8 +87,14 @@ public class BossRoomManager : MonoBehaviour
             isDoorClosed = true;
             playerTransform = collision.transform;
 
-            if (entranceDoor != null)
-                entranceDoor.SetActive(true); // 문 닫힘
+            // 문 닫힘
+            if (entranceDoors != null)
+            {
+                foreach (var door in entranceDoors)
+                {
+                    door.SetActive(true);
+                }
+            }
 
             // TODO: BGM 정지, 컷씬 카메라 전환 등 연출 추가 가능
         }
@@ -107,6 +127,8 @@ public class BossRoomManager : MonoBehaviour
 
         boss.WakeUp();
         // TODO: 보스전 전용 BGM 재생 시작
+        FeedbackManager.Instance.TriggerBossRoarFeedback(1f, 7f, 1f);
+        AudioManager.Instance.PlayBGM("BGM_Battle");
     }
 
     // 방 클리어 처리 함수
@@ -118,9 +140,17 @@ public class BossRoomManager : MonoBehaviour
         if (bossHealthBar != null) bossHealthBar.gameObject.SetActive(false);
 
         // 2. 닫혔던 입구 문 다시 열기 (혹은 다음 스테이지로 가는 출구 문 열기)
-        if (entranceDoor != null) entranceDoor.SetActive(false);
+        if (entranceDoors != null)
+        {
+            foreach (var door in entranceDoors)
+            {
+                door.SetActive(false);
+            }
+        }
 
         // TODO: 승리 BGM 재생, 보상 상자 소환 등 추가 연출
+        FeedbackManager.Instance.ResetCameraZoom();
+        AudioManager.Instance.PlayBGM("BGM_Stage");
     }
 
     private void OnDrawGizmos()

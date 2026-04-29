@@ -31,25 +31,33 @@ public class EnemyChaseState : EnemyState
             return;
         }
 
-        // 내가 원거리 몬스터인데, 플레이어가 너무 가깝다? -> 쫓아가지 말고 도망쳐!
-        // (RangedEnemyData를 사용하는 적만 후퇴 행동을 가짐)
+        // 원거리 몬스터 + 너무 가까움 → 도망
         if (enemy.Data is RangedEnemyData && enemy.IsPlayerInRetreatRange())
         {
             stateMachine.ChangeState(enemy.RetreatState);
             return;
         }
 
-        // 공격 사거리 진입 시 -> 묻지도 따지지도 않고 공격 상태로!
+        // 공격 사거리 진입 + 쿨타임 체크
         if (enemy.IsPlayerInAttackRange())
         {
-            stateMachine.ChangeState(enemy.AttackState);
+            // 쿨타임이 끝났을 때만 공격 상태로 전환
+            if (Time.time >= enemy.lastAttackTime + enemy.Data.attackCooldown)
+            {
+                stateMachine.ChangeState(enemy.AttackState);
+                return;
+            }
+            // 쿨타임 중이면 추격 멈추고 플레이어 쪽 바라보기 (다음 공격 대기)
+            // chaseDir을 0으로 만들어서 FixedUpdate에서 멈춤
+            chaseDir = 0;
+            enemy.TurnTowards(enemy.PlayerTransform);
             return;
         }
 
-        // 추격 중이라면 무조건 플레이어의 현재 위치를 향해 방향을 실시간으로 갱신합니다!
+        // 추격 중 방향 갱신
         chaseDir = Mathf.Sign(enemy.PlayerTransform.position.x - enemy.transform.position.x);
 
-        // 2. 시야 판정 (어그로 유지 시스템)
+        // 2. 시야 판정 (어그로 유지)
         if (!enemy.IsPlayerInSight())
         {
             lostSightTimer += Time.deltaTime;

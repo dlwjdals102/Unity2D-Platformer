@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class CombatComponent : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class CombatComponent : MonoBehaviour
     // ==========================================
     // 1. 근접 공격 (Melee)
     // ==========================================
-    public bool PerformMeleeAttack(float damage, float facingDirection = 1f)
+    public bool PerformMeleeAttack(float damage, float facingDirection = 1f, string hitSpark = "")
     {
         if (attackPoint == null) return false;
 
@@ -39,7 +40,11 @@ public class CombatComponent : MonoBehaviour
 
                 // TODO  
                 // 찾아낸 정확한 좌표에 스파크를 개별적으로 터뜨립니다. 
-                // FeedbackManager.Instance.SpawnVFX("HitSpark", exactHitPoint, facingDirection);
+                if (!string.IsNullOrWhiteSpace(hitSpark))
+                {
+                    FeedbackManager.Instance.SpawnVFX(hitSpark, exactHitPoint, facingDirection);
+                }
+                
             }
         }
 

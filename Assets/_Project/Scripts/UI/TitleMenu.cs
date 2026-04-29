@@ -17,23 +17,25 @@ public class TitleMenu : MonoBehaviour
         // 마우스 커서 활성화 (타이틀 씬 필수)
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        AudioManager.Instance?.PlayBGM("BGM_Title");
     }
 
     public void OnClickNewGame()
     {
         // 새 게임 시작 시 기존 데이터 완전 삭제
-        if (DataManager.Instance != null)
+        if (DataManager.Instance != null && SceneTransitionManager.Instance != null)
         {
             DataManager.Instance.ClearData();
-        }
 
-        if (SceneTransitionManager.Instance != null)
-        {
-            SceneTransitionManager.Instance.TransitionToScene(Define.SceneNames.Test, "StartPortal");
-        }
-        else
-        {
-            Debug.LogError("[TitleMenu] SceneTransitionManager가 없어 새 게임을 시작할 수 없습니다.");
+            // 새 게임의 시작 위치를 sessionData에 직접 명시
+            DataManager.Instance.sessionData.lastSceneName = Define.SceneNames.Stage_1;
+            DataManager.Instance.sessionData.lastPortalID = "StartPortal";
+            DataManager.Instance.hasSavedData = true; // 위치 복원 로직 활성화
+
+            SceneTransitionManager.Instance.TransitionToScene(
+                DataManager.Instance.sessionData.lastSceneName,
+                DataManager.Instance.sessionData.lastPortalID);
         }
 
     }
@@ -66,7 +68,6 @@ public class TitleMenu : MonoBehaviour
     /// </summary>
     public void QuitGame()
     {
-        Debug.Log("[TitleMenuManager] 게임을 종료합니다.");
 
         // 에디터에서는 플레이 모드를 정지하고, 실제 빌드된 게임에서는 창을 닫습니다.
 #if UNITY_EDITOR

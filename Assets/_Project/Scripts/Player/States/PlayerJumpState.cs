@@ -16,6 +16,8 @@ public class PlayerJumpState : PlayerAirborneState
         // 점프를 실행했으므로 선입력 타이머를 즉시 초기화
         player.UseJumpBuffer();
         player.UseCoyoteTime();
+
+        AudioManager.Instance.Play("SFX_Jump");
     }
 
     public override void Update()

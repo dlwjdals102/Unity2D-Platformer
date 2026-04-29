@@ -13,26 +13,25 @@ MonoBehaviour:
   m_Name: Phase01BossData
   m_EditorClassIdentifier: Assembly-CSharp::BossData
   maxHealth: 100
-  moveSpeed: 5
   bossName: 
   chaseSpeed: 4
   attackCooldown: 2
   bossAttacks:
   - attackName: Attack01
     animTriggerName: Attack01
-    attackDamage: 10
-    attackDistance: 4
+    attackDamage: 100
+    attackDistance: 2.6
     weight: 1
     behaviorType: 0
     projectileTag: 
-    hitRadius: 1.5
-    hitOffset: {x: 2.5, y: 0}
+    hitRadius: 1.2
+    hitOffset: {x: 1.4, y: 0}
   - attackName: Attack02
     animTriggerName: Attack02
-    attackDamage: 10
-    attackDistance: 4
+    attackDamage: 100
+    attackDistance: 2.6
     weight: 1
     behaviorType: 0
     projectileTag: 
-    hitRadius: 1.5
-    hitOffset: {x: 2.5, y: 0}
+    hitRadius: 0.75
+    hitOffset: {x: 1.85, y: -0.37}

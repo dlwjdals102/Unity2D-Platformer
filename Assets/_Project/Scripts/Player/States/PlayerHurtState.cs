@@ -14,6 +14,8 @@ public class PlayerHurtState : PlayerState
 
         // 정확한 타격 반대 방향으로 튕겨나감!
         player.Movement.SetVelocity(player.KnockbackDirection * player.knockbackForceX, player.knockbackForceY);
+
+        AudioManager.Instance.Play("SFX_Hurt");
     }
 
     public override void Update()   

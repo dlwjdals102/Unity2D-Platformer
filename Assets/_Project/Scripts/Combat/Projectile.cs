@@ -15,8 +15,9 @@ public class Projectile : MonoBehaviour
     private float shakeIntensity;
     private float hitStopDuration;
 
-    // Ground 레이어 인덱스 캐싱 (매 충돌마다 LayerMask.NameToLayer 호출 방지)
-    private static readonly int GroundLayerId = LayerMask.NameToLayer(Define.LayerNames.Ground);
+    // Ground 레이어 인덱스 캐싱 (매 충돌마다 LayerMask.NameToLayer 호출 방지) 
+    //private static readonly int GroundLayerId = LayerMask.NameToLayer(Define.LayerNames.Ground); // LayerMask.NameToLayer()는 MonoBehaviour 생성/초기화 단계에서는 호출 금지
+    private int GroundLayerId;
 
     // 풀링 시스템에서 같은 프레임에 여러 콜라이더와 부딪쳐도 중복 처리되지 않도록 가드
     private bool hasHit;
@@ -24,6 +25,7 @@ public class Projectile : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        GroundLayerId = LayerMask.NameToLayer(Define.LayerNames.Ground);
     }
 
     // (풀에서 꺼내져 활성화될 때마다 실행됨)

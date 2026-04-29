@@ -32,6 +32,8 @@ public class PlayerAirborneState : PlayerState
                 stateMachine.ChangeState(player.MoveState);
             else
                 stateMachine.ChangeState(player.IdleState);
+
+            AudioManager.Instance.Play("SFX_Land");
         }
     }
 

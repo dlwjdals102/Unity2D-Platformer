@@ -29,6 +29,8 @@ public class PlayerDashState : PlayerState
 
             // 대시 중에는 중력을 0으로 만들어 일직선으로 날아가게 합니다.
             player.SetGravityScale(0f);
+
+            AudioManager.Instance.Play("SFX_Dash");
         }
         else
         {

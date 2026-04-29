@@ -10,6 +10,11 @@ public class BossIntroState : BossState
         base.Enter();
         boss.Movement.RB.linearVelocity = Vector2.zero;
 
+        Transform player = boss.PlayerTransform;
+        if (player == null) return;
+
+        boss.TurnTowards(player);
+
         // 여기서 "크아앙" 하는 등장 이펙트나 화면 흔들림(Camera Shake)을 호출하면 좋습니다!
     }
 

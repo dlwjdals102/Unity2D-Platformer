@@ -77,7 +77,7 @@ public class PlayerAttackState : PlayerState
     public override void TriggerAttack()
     {
         // Combat 컴포넌트에게 "때려!" 라고 직접 지시합니다. (극강의 직관성!)
-        bool hitSomething = player.Combat.PerformMeleeAttack(player.Data.attackDamage, player.Movement.FacingDirection);
+        bool hitSomething = player.Combat.PerformMeleeAttack(player.Data.attackDamage, player.Movement.FacingDirection, "HitSpark");
 
         // 적중했을 때만!
         if (hitSomething)
@@ -86,6 +86,18 @@ public class PlayerAttackState : PlayerState
             {
                 FeedbackManager.Instance.TriggerHitStop(0.07f);
                 FeedbackManager.Instance.TriggerCameraShake(1f);
+            }
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Play("SFX_Hit");
+            }
+        }
+        else
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Play("SFX_Miss");
             }
         }
     }
