@@ -4,12 +4,13 @@
 > 디자인 패턴과 컴포넌트 기반 아키텍처를 적용해 확장 가능한 구조로 설계했습니다.
 
 <p align="center">
-  <img src="docs/main.gif" alt="Gameplay" width="720"/>
+  <img width="1280" height="720" alt="Image" src="https://github.com/user-attachments/assets/7c53170e-3a62-4cf0-8385-d3c90f355afd" />&nbsp;&nbsp;
+  <img width="1280" height="720" alt="Image" src="https://github.com/user-attachments/assets/ffe46119-8fd2-408f-a36c-0ce8bb19d269" />
 </p>
 
 <p align="center">
-  📝 <a href=""><b>상세 포트폴리오 (Notion)</b></a> &nbsp;·&nbsp;
-  🎬 <a href="">플레이 영상</a> &nbsp;·&nbsp;
+  📝 <a href="https://cookie-lock-dbc.notion.site/Unity-2D-34e87bfb3960805ea2b6e504c4e6c4de?source=copy_link"><b>상세 포트폴리오 (Notion)</b></a> &nbsp;·&nbsp;
+  🎬 <a href="https://youtu.be/fAOMKv_2ZQY">플레이 영상</a> &nbsp;·&nbsp;
   🎮 <a href="">플레이하기 (WebGL)</a>
 </p>
 
@@ -50,7 +51,7 @@
 - **체크포인트 / 포탈** — 우선순위 기반 부활 위치 복원
 - **Object Pooling** — Queue 순환(Dequeue→Enqueue) 구조로 반납 처리 없이 무한 재활용
 
-> 📖 **설계 의도, 코드 스니펫, 트러블슈팅 등은 [노션 포트폴리오](https://...)에 자세히 정리했습니다.**
+> 📖 **설계 의도, 코드 스니펫, 트러블슈팅 등은 [노션 포트폴리오](https://cookie-lock-dbc.notion.site/Unity-2D-34e87bfb3960805ea2b6e504c4e6c4de?source=copy_link)에 자세히 정리했습니다.**
 
 ---
 
@@ -72,5 +73,5 @@ Assets/Scripts/
 
 ## 📮 Contact
 
-**Email** · <!-- TODO --> &nbsp;·&nbsp; 
-**Notion** · <!-- TODO -->
+- **Email** · dlwjdals102@naver.com
+- **Notion** · [노션 포트폴리오](https://cookie-lock-dbc.notion.site/Unity-2D-34e87bfb3960805ea2b6e504c4e6c4de?source=copy_link)
