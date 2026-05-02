@@ -18,5 +18,8 @@ MonoBehaviour:
   dashSpeed: 20
   dashDuration: 0.2
   dashCooldown: 1
-  attackDamage: 15
+  maxMana: 100
+  dashManaCost: 30
+  manaRegenRate: 15
+  attackDamage: 34
   iFrameDuration: 0.5

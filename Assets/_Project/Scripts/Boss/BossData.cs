@@ -2,12 +2,6 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-public enum BehaviorType
-{
-    NormalMelee,    // 제자리 근접 타격
-    ShockwaveSlam   // 제자리 파동 발사 (장풍)
-}
-
 // ==========================================
 // 1. 보스 공격 패턴 단위 구조체
 // ==========================================
@@ -31,7 +25,7 @@ public struct BossAttackInfo
     public float weight;
 
     [Header("Behavior Settings")]
-    public BehaviorType behaviorType;   // 행동 명찰
+    public BossAttackBehavior behavior;
     [Tooltip("Ranged 타입일 경우, ObjectPool에서 꺼내올 투사체의 이름(Tag)")]
     public string projectileTag;
 

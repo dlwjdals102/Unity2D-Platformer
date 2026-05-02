@@ -22,11 +22,32 @@ public class BossMeleeAttackState : BossState
     public override void TriggerAttack()
     {
         // 坷流 辟立 单固瘤 惯积父 贸府!
-        boss.Combat.PerformCustomMeleeAttack(
+        bool hitSomething = boss.Combat.PerformCustomMeleeAttack(
             damage: boss.NextAttack.attackDamage,
             offset: boss.NextAttack.hitOffset,
             customRadius: boss.NextAttack.hitRadius,
             facingDirection: boss.Movement.FacingDirection
         );
+
+        if (hitSomething)
+        {
+            if (FeedbackManager.Instance != null)
+            {
+                FeedbackManager.Instance.TriggerHitStop(0.07f);
+                FeedbackManager.Instance.TriggerCameraShake(1f);
+            }
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Play("SFX_Hit");
+            }
+        }
+        else
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.Play("SFX_Miss");
+            }
+        }
     }
 }

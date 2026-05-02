@@ -1817,10 +1817,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 5815325699434395890, guid: e064aa19b2fe44d499758f656bb35690, type: 3}
-      propertyPath: defaultFadeDuration
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6462037230051432344, guid: e064aa19b2fe44d499758f656bb35690, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1859,14 +1855,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6462037230051432344, guid: e064aa19b2fe44d499758f656bb35690, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6533849090180698981, guid: e064aa19b2fe44d499758f656bb35690, type: 3}
-      propertyPath: m_Color.a
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887767753500945142, guid: e064aa19b2fe44d499758f656bb35690, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8409990215138528352, guid: e064aa19b2fe44d499758f656bb35690, type: 3}

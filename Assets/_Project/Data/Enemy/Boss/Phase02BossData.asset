@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 660cb3fffb8899143ba5c90a523f5eb8, type: 3}
   m_Name: Phase02BossData
   m_EditorClassIdentifier: Assembly-CSharp::BossData
-  maxHealth: 100
+  maxHealth: 300
   bossName: 
   chaseSpeed: 4
   attackCooldown: 2
@@ -22,7 +22,7 @@ MonoBehaviour:
     attackDamage: 10
     attackDistance: 2.6
     weight: 1
-    behaviorType: 0
+    behavior: {fileID: 11400000, guid: fb10d8b47a3f4f54585032d1c57ac8fb, type: 2}
     projectileTag: 
     hitRadius: 1.2
     hitOffset: {x: 1.4, y: 0}
@@ -31,7 +31,7 @@ MonoBehaviour:
     attackDamage: 10
     attackDistance: 2.6
     weight: 1
-    behaviorType: 0
+    behavior: {fileID: 11400000, guid: fb10d8b47a3f4f54585032d1c57ac8fb, type: 2}
     projectileTag: 
     hitRadius: 0.75
     hitOffset: {x: 1.85, y: -0.37}
@@ -39,8 +39,8 @@ MonoBehaviour:
     animTriggerName: Attack03
     attackDamage: 20
     attackDistance: 2.5
-    weight: 1
-    behaviorType: 0
+    weight: 5
+    behavior: {fileID: 11400000, guid: fb10d8b47a3f4f54585032d1c57ac8fb, type: 2}
     projectileTag: 
     hitRadius: 1.8
     hitOffset: {x: 0.5, y: 0}

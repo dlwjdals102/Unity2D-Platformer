@@ -127,15 +127,6 @@ public class AudioManager : MonoBehaviour
     public void Play(string name)
     {
         // 이름이 일치하는 사운드를 찾습니다.
-        /* Sound s = System.Array.Find(sounds, sound => sound.name == name);
-
-         if (s == null)
-         {
-             Debug.LogWarning("사운드를 찾을 수 없습니다: " + name);
-             return;
-         }*/
-
-        // 이름이 일치하는 사운드를 찾습니다.
         if (!soundDictionary.TryGetValue(name, out Sound s))
         {
             Debug.LogWarning("사운드를 찾을 수 없습니다: " + name);
@@ -162,10 +153,6 @@ public class AudioManager : MonoBehaviour
     {
         // 0. 같은 BGM이 이미 재생 중이면 무시 (씬 전환 시 끊김 방지)
         if (currentBGMName == name) return;
-
-        /*// 1. 재생할 BGM 데이터를 찾습니다.
-        Sound s = System.Array.Find(sounds, sound => sound.name == name);
-        if (s == null) return;*/
 
         // 1. 재생할 BGM 데이터를 찾습니다.
         if (!soundDictionary.TryGetValue(name, out Sound s)) return;
@@ -210,5 +197,40 @@ public class AudioManager : MonoBehaviour
         activeSource.volume = 0f;
         activeSource.Stop();
         newSource.volume = targetVolume;
+    }
+
+    // ==========================================
+    // BGM 정지 함수
+    // ==========================================
+    public void StopBGM(float fadeDuration = 1f)
+    {
+        StopCoroutine(nameof(FadeOutAndStop));
+
+        StartCoroutine(FadeOutAndStop(bgmSourceA, fadeDuration));
+        StartCoroutine(FadeOutAndStop(bgmSourceB, fadeDuration));
+
+        currentBGMName = "";
+    }
+
+    // 서서히 줄이면서 정지
+    private IEnumerator FadeOutAndStop(AudioSource source, float duration)
+    {
+        if (source == null || !source.isPlaying)
+            yield break;
+
+        float startVolume = source.volume;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            source.volume = Mathf.Lerp(startVolume, 0f, time / duration);
+
+            yield return null;
+        }
+
+        source.volume = 0f;
+        source.Stop();
     }
 }

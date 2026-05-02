@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 [RequireComponent(typeof(BoxCollider2D))]
 public class BossRoomManager : MonoBehaviour
@@ -95,8 +96,9 @@ public class BossRoomManager : MonoBehaviour
                     door.SetActive(true);
                 }
             }
-
             // TODO: BGM 정지, 컷씬 카메라 전환 등 연출 추가 가능
+            AudioManager.Instance.StopBGM();
+            AudioManager.Instance.Play("SFX_Close");
         }
     }
 

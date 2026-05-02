@@ -15,8 +15,6 @@ public class Boss : Entity
     public BossIntroState IntroState { get; private set; }
     public BossIdleState IdleState { get; private set; }
     public BossChaseState ChaseState { get; private set; }
-    public BossMeleeAttackState MeleeAttackState { get; private set; }
-    public BossShockwaveState ShockwaveState { get; private set; }
     public BossDeadState DeadState { get; private set; }
 
     [Header("Detection Setup")]
@@ -43,8 +41,6 @@ public class Boss : Entity
         IntroState = new BossIntroState(this, stateMachine, "Intro");
         IdleState = new BossIdleState(this, stateMachine, "Idle");
         ChaseState = new BossChaseState(this, stateMachine, "Move");
-        MeleeAttackState = new BossMeleeAttackState(this, stateMachine, "attack");
-        ShockwaveState = new BossShockwaveState(this, stateMachine, "attack");
         DeadState = new BossDeadState(this, stateMachine, "Dead");
     }
 

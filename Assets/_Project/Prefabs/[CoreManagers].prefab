@@ -1552,6 +1552,14 @@ MonoBehaviour:
     cooldown: 0.05
     lastPlayTime: 0
     source: {fileID: 0}
+  - name: SFX_Close
+    clip: {fileID: 8300000, guid: d4fd7c589870fd7408f2b29ca3c8d81a, type: 3}
+    mixerGroup: {fileID: 236992194716071074, guid: 67257d497d727324da07652b33d8b52f, type: 2}
+    volume: 0.7
+    pitch: 1
+    cooldown: 0.05
+    lastPlayTime: 0
+    source: {fileID: 0}
   bgmMixerGroup: {fileID: 8198068317280938686, guid: 67257d497d727324da07652b33d8b52f, type: 2}
   mainMixer: {fileID: 24100000, guid: 67257d497d727324da07652b33d8b52f, type: 2}
 --- !u!1 &3386694008591235304
@@ -3304,10 +3312,10 @@ MonoBehaviour:
   pools:
   - tag: HitSpark
     prefab: {fileID: 4137898712848856215, guid: 269be0884682363419242bea03cf3c4f, type: 3}
-    size: 10
+    size: 5
   - tag: Arrow
     prefab: {fileID: 6988679895013087120, guid: 4429d03303ee72c4384b5b6e4e3e302c, type: 3}
-    size: 10
+    size: 5
 --- !u!1 &7321826000445193313
 GameObject:
   m_ObjectHideFlags: 0
@@ -3716,7 +3724,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

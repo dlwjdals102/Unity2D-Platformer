@@ -21,16 +21,8 @@ public class BossChaseState : BossState
         // 내가 고른 공격(NextAttack)의 사거리에 들어왔는가?!
         if (distanceToPlayer <= boss.NextAttack.attackDistance)
         {
-            // 들어왔다면 즉시 공격!
-            switch (boss.NextAttack.behaviorType)
-            {
-                case BehaviorType.NormalMelee:
-                    stateMachine.ChangeState(boss.MeleeAttackState);
-                    break;
-                case BehaviorType.ShockwaveSlam:
-                    stateMachine.ChangeState(boss.ShockwaveState);
-                    break;
-            }
+            BossState attackState = boss.NextAttack.behavior.CreateState(boss, stateMachine);
+            stateMachine.ChangeState(attackState);
         }
     }
 
