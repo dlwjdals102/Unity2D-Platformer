@@ -11,7 +11,7 @@
 <p align="center">
   📝 <a href="https://cookie-lock-dbc.notion.site/Unity-2D-34e87bfb3960805ea2b6e504c4e6c4de?source=copy_link"><b>상세 포트폴리오 (Notion)</b></a> &nbsp;·&nbsp;
   🎬 <a href="https://youtu.be/fAOMKv_2ZQY">플레이 영상</a> &nbsp;·&nbsp;
-  🎮 <a href="">플레이하기 (WebGL)</a>
+  <!-- 🎮 <a href="">플레이하기 (WebGL)</a> -->
 </p>
 
 ---
